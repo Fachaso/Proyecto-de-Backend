@@ -17,6 +17,18 @@
 *
 ---
 
+## Versiones utilizadas 
+... [OBLIGATORIO COMPLETAR]
+## Pasos de instalación 
+... [OBLIGATORIO COMPLETAR]
+## Ejecución 
+... [OBLIGATORIO COMPLETAR]
+## Configuración
+... [OBLIGATORIO COMPLETAR]
+## Ejemplos de solicitudes y supuestos adoptados
+... [OBLIGATORIO COMPLETAR]
+
+
 ## Índice
 * [0. Enunciado](#0-Enunciado)
 * [1. Instrucciones](#1-Instrucciones)
