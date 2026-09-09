@@ -10,10 +10,10 @@
 * Yohan Rodrigo Cornejo Campana -116364 - ycornejo@fi.uba.ar
 * Lucas Nahuel Uran -116478 - luran@fi.uba.ar
 * Pablo Martin Cantoni Noblia -115568 -pcantoni@fi.uba.ar
-*
-*
-*
-*
+* Tiziana Gonzales -116294
+* Julieta Nagera -114474
+* Guadalupe Fernandez -115583
+* Sarai Slavkis -114351 -sslavkis@fi.uba.ar
 *
 ---
 
