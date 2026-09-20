@@ -41,3 +41,16 @@ def delete_cancha(cancha_id):
     if resultado:
         return jsonify(resultado), status_code
     return '', status_code
+
+@canchas_bp.route('/canchas/disponibles', methods=['GET'])
+def get_canchas_disponibles():
+    fecha = request.args.get('fecha')
+    hora_inicio = request.args.get('hora_inicio')
+    hora_fin = request.args.get('hora_fin')
+    id_deporte = request.args.get('id_deporte')
+
+    if not fecha or not hora_inicio or not hora_fin:
+        return jsonify({'error': 'Parámetros fecha, hora_inicio y hora_fin son requeridos'}), 400
+
+    canchas_disponibles = CanchasService.obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte)
+    return jsonify(canchas_disponibles), 200

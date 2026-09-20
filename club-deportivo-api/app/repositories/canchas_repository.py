@@ -80,3 +80,36 @@ class CanchasRepository:
                 conn.commit()
         finally:
             conn.close()
+
+    @staticmethod
+    def obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte):
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activa
+                    FROM canchas c
+                    WHERE c.activa = 1
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM reservas r
+                        WHERE r.id_cancha = c.id
+                        AND r.fecha = %s
+                        AND (
+                            (r.hora_inicio < %s AND r.hora_fin > %s) OR
+                            (r.hora_inicio < %s AND r.hora_fin > %s) OR
+                            (r.hora_inicio >= %s AND r.hora_fin <= %s)
+                        )
+                    )
+                """
+                params = [fecha, hora_fin, hora_inicio, hora_fin, hora_inicio, hora_inicio, hora_fin]
+
+                if id_deporte:
+                    query += " AND c.id_deporte = %s"
+                    params.append(id_deporte)
+
+                cursor.execute(query, params)
+                return cursor.fetchall()
+        finally:
+            conn.close()
+    #def 

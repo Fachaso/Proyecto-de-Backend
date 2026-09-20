@@ -129,3 +129,21 @@ class CanchasService:
 
         CanchasRepository.eliminar(cancha_id)
         return None, 204
+
+    @staticmethod
+    def obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte):
+        if not CanchasRepository.verificar_formato_fecha(fecha):
+            return {'error': 'Formato de fecha inválido. Se espera YYYY-MM-DD'}, 400
+
+        if not CanchasRepository.verificar_formato_hora(hora_inicio) or not CanchasRepository.verificar_formato_hora(hora_fin):
+            return {'error': 'Formato de hora inválido. Se espera HH:MM'}, 400
+
+        if hora_inicio >= hora_fin:
+            return {'error': 'La hora de inicio debe ser menor que la hora de fin'}, 400
+
+        canchas_disponibles = CanchasRepository.obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte)
+        for c in canchas_disponibles:
+            c['techada'] = bool(c['techada'])
+            c['activa'] = bool(c['activa'])
+
+        return canchas_disponibles
