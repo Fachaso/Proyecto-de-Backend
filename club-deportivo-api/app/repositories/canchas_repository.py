@@ -82,18 +82,18 @@ class CanchasRepository:
             conn.close()
 
     @staticmethod
-    def obtener_canchas_disponibles(inicio_solicitado. fin_solicitado, id_deporte=None, techada=None, limit=10, offset=0):
+    def obtener_canchas_disponibles(inicio_solicitado, fin_solicitado, id_deporte=None, techada=None, limit=10, offset=0):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
                where_clauses = [ 
-                   "c.activada = TRUE", 
+                   "c.activa = TRUE", 
                    "NOT EXISTS ("
                    "  SELECT 1 FROM reservas r "
                    "  WHERE r.id_cancha = c.id "
                    "  AND r.estado = 'confirmada' "
                    "  AND r.fecha_hora_inicio < %s "
-                   "  AND r.fecha_hora_fin > %S"
+                   "  AND r.fecha_hora_fin > %s"
                    ")"
                ]
                params = [fin_solicitado, inicio_solicitado]
@@ -103,7 +103,7 @@ class CanchasRepository:
                     params.append(id_deporte)
 
                 if techada is not None:
-                    where_clauses.append("c.techada = &S")
+                    where_clauses.append("c.techada = %s")
                     params.append(techada)
 
                 where_sql = " WHERE " + " AND ".join(where_clauses)
@@ -112,7 +112,7 @@ class CanchasRepository:
                 total = cursor.fetchone()['total']
 
                 query = (
-                    f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activada "
+                    f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activa "
                     f"FROM canchas c{where_sql} ORDER BY c.id ASC LIMIT %s OFFSET %s"
                 )
                 cursor.execute(query, params + [limit, offset])
