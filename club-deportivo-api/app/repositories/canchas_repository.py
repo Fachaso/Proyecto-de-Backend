@@ -121,20 +121,4 @@ class CanchasRepository:
                 return canchas, total
         finally:
             conn.close()
-    @staticmethod
-    def verificar_formato_fecha(fecha):
-        from datetime import datetime
-        try:
-            datetime.strptime(fecha, '%Y-%m-%d')
-            return True
-        except ValueError:
-            return False
-    @staticmethod
-    def verificar_formato_hora(hora):
-        from datetime import datetime
-        try:
-            datetime.strptime(hora, '%H:%M:%S')
-            return True
-        except ValueError:
-            return False
-        
+   
