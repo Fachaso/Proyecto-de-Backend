@@ -19,12 +19,17 @@ class SociosRepository:
             conn.close()
 
     @staticmethod
-    def verificar_email_existente(email):
+    def verificar_email_existente(email, socio_id_excluir=None):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id FROM socios WHERE LOWER(email) = %s", (email.lower(),))
-                return cursor.fetchone() is not None
+                if socio_id_excluir:
+                   query = "SELECT id FROM socios WHERE LOWER(email) = %s AND id != %s"
+                   cursor.execute(query, (email.lower(), socio_id_excluir))
+                else:
+                    query = "SELECT id FROM socios WHERE LOWER(email) = %s"
+                    cursor.execute(query, (email.lower(),))
+                return cursor.fetchone() is not None 
         finally:
             conn.close()
 
