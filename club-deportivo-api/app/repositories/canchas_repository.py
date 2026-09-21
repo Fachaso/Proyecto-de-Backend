@@ -82,35 +82,43 @@ class CanchasRepository:
             conn.close()
 
     @staticmethod
-    def obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte):
-        inicio_solicitado = f"{fecha} {hora_inicio}"
-        fin_solicitado = f"{fecha} {hora_fin}"
-        
+    def obtener_canchas_disponibles(inicio_solicitado. fin_solicitado, id_deporte=None, techada=None, limit=10, offset=0):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                query = """
-                    SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activa
-                    FROM canchas c
-                    WHERE c.activa = 1
-                    AND NOT EXISTS (
-                        SELECT 1
-                        FROM reservas r
-                        WHERE r.id_cancha = c.id
-                        AND r.estado != 'cancelada' 
-                        AND r.fecha_hora_inicio < %s 
-                        AND r.fecha_hora_fin > %s
-                    )
-                """
+               where_clauses = [ 
+                   "c.activada = TRUE", 
+                   "NOT EXISTS ("
+                   "  SELECT 1 FROM reservas r "
+                   "  WHERE r.id_cancha = c.id "
+                   "  AND r.estado = 'confirmada' "
+                   "  AND r.fecha_hora_inicio < %s "
+                   "  AND r.fecha_hora_fin > %S"
+                   ")"
+               ]
+               params = [fin_solicitado, inicio_solicitado]
                 
-                params = [fin_solicitado, inicio_solicitado]
-                
-                if id_deporte:
-                    query += " AND c.id_deporte = %s"
+                if id_deporte is not None:
+                    where_clauses.append("c.id_deporte = %s")
                     params.append(id_deporte)
-                    
-                cursor.execute(query, params)
-                return cursor.fetchall()
+
+                if techada is not None:
+                    where_clauses.append("c.techada = &S")
+                    params.append(techada)
+
+                where_sql = " WHERE " + " AND ".join(where_clauses)
+                
+                cursor.execute(f"SELECT COUNT(*) as total FROM canchas c{where_sql}", params)
+                total = cursor.fetchone()['total']
+
+                query = (
+                    f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activada "
+                    f"FROM canchas c{where_sql} ORDER BY c.id ASC LIMIT %s OFFSET %s"
+                )
+                cursor.execute(query, params + [limit, offset])
+                canchas = cursor.fetchall()
+                
+                return canchas, total
         finally:
             conn.close()
     @staticmethod
