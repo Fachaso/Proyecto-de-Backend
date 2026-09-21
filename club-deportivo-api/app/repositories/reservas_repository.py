@@ -50,7 +50,7 @@ class ReservasRepository:
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id FROM usuarios WHERE id = %s", (id_socio,))
+                cursor.execute("SELECT id, activo FROM socios WHERE id = %s", (id_socio,))
                 return cursor.fetchone()
         finally:
             conn.close()
