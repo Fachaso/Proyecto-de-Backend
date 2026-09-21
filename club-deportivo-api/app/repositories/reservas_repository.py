@@ -39,7 +39,7 @@ class ReservasRepository:
             conn.close()
 
     @staticmethod
-    def obtener_usuario(id_socio):
+    def obtener_socio(id_socio):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
