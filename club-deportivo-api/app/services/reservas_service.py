@@ -3,7 +3,7 @@ from app.repositories.reservas_repository import ReservasRepository
 class ReservasService:
 
     @staticmethod
-    def listar_reservas(limit, offset, id_cancha, fecha):
+    def listar_reservas(limit, offset, id_cancha, fecha_hora_inicio):
         where_clauses = []
         params = []
         extra_params = {}
@@ -40,12 +40,12 @@ class ReservasService:
     @staticmethod
     def crear_reserva(data):
         id_cancha = data.get('id_cancha')
-        id_usuario = data.get('id_usuario')
+        id_socio = data.get('id_socio')
         fecha = data.get('fecha')
         hora_inicio = data.get('hora_inicio')
         duracion_horas = data.get('duracion_horas', 1)
 
-        if not id_cancha or not id_usuario or not fecha or not hora_inicio:
+        if not id_cancha or not id_socio or not fecha or not hora_inicio:
             return {'error': 'Campos obligatorios faltantes'}, 400
 
         cancha = ReservasRepository.obtener_cancha(id_cancha)
@@ -54,7 +54,7 @@ class ReservasService:
         if not cancha['activa']:
             return {'error': 'La cancha especificada no está activa'}, 400
 
-        usuario = ReservasRepository.obtener_usuario(id_usuario)
+        usuario = ReservasRepository.obtener_usuario(id_socio)
         if not usuario:
             return {'error': 'Usuario no encontrado'}, 404
 
@@ -62,12 +62,12 @@ class ReservasService:
             return {'error': 'La cancha ya se encuentra reservada en ese horario'}, 409
 
         precio_total = cancha['precio_hora'] * duracion_horas
-        reserva_id = ReservasRepository.crear(id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total)
+        reserva_id = ReservasRepository.crear(id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total)
 
         return {
             'id': reserva_id,
             'id_cancha': id_cancha,
-            'id_usuario': id_usuario,
+            'id_socio': id_socio,
             'fecha': str(fecha),
             'hora_inicio': str(hora_inicio),
             'duracion_horas': duracion_horas,
@@ -75,9 +75,10 @@ class ReservasService:
         }, 201
 
     @staticmethod
-    def eliminar_reserva(reserva_id):
+    def actualizar_estado(reserva_id, nuevo_estado):
         reserva = ReservasRepository.obtener_por_id(reserva_id)
         if not reserva:
-            return False
-        ReservasRepository.eliminar(reserva_id)
-        return True
+            return {'error': 'Reserva no encontrada'}, 404
+
+        ReservasRepository.actualizar_estado(reserva_id, nuevo_estado)
+        return {'message': 'Estado de la reserva actualizado correctamente'}, 200

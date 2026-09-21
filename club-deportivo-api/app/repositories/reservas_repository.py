@@ -11,7 +11,7 @@ class ReservasRepository:
                 cursor.execute(count_query, params)
                 total = cursor.fetchone()['total']
 
-                data_query = f"SELECT id, id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total FROM reservas{where_sql} ORDER BY id ASC LIMIT %s OFFSET %s"
+                data_query = f"SELECT id, id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total FROM reservas{where_sql} ORDER BY id ASC LIMIT %s OFFSET %s"
                 cursor.execute(data_query, params + [limit, offset])
                 reservas = cursor.fetchall()
                 return reservas, total
@@ -23,7 +23,7 @@ class ReservasRepository:
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id, id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total FROM reservas WHERE id = %s", (reserva_id,))
+                cursor.execute("SELECT id, id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total FROM reservas WHERE id = %s", (reserva_id,))
                 return cursor.fetchone()
         finally:
             conn.close()
@@ -39,11 +39,11 @@ class ReservasRepository:
             conn.close()
 
     @staticmethod
-    def obtener_usuario(id_usuario):
+    def obtener_usuario(id_socio):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id FROM usuarios WHERE id = %s", (id_usuario,))
+                cursor.execute("SELECT id FROM usuarios WHERE id = %s", (id_socio,))
                 return cursor.fetchone()
         finally:
             conn.close()
@@ -63,23 +63,24 @@ class ReservasRepository:
             conn.close()
 
     @staticmethod
-    def crear(id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total):
+    def crear(id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                query = "INSERT INTO reservas (id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total) VALUES (%s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (id_cancha, id_usuario, fecha, hora_inicio, duracion_horas, precio_total))
+                query = "INSERT INTO reservas (id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total) VALUES (%s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total))
                 conn.commit()
                 return cursor.lastrowid
         finally:
             conn.close()
 
     @staticmethod
-    def eliminar(reserva_id):
+    def actualizar_estado(reserva_id, nuevo_estado):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("DELETE FROM reservas WHERE id = %s", (reserva_id,))
+                query = "UPDATE reservas SET estado = %s WHERE id = %s"
+                cursor.execute(query, (nuevo_estado, reserva_id))
                 conn.commit()
         finally:
             conn.close()

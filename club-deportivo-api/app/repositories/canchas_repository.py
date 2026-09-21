@@ -83,6 +83,9 @@ class CanchasRepository:
 
     @staticmethod
     def obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte):
+        inicio_solicitado = f"{fecha} {hora_inicio}"
+        fin_solicitado = f"{fecha} {hora_fin}"
+        
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
@@ -94,22 +97,36 @@ class CanchasRepository:
                         SELECT 1
                         FROM reservas r
                         WHERE r.id_cancha = c.id
-                        AND r.fecha = %s
-                        AND (
-                            (r.hora_inicio < %s AND r.hora_fin > %s) OR
-                            (r.hora_inicio < %s AND r.hora_fin > %s) OR
-                            (r.hora_inicio >= %s AND r.hora_fin <= %s)
-                        )
+                        AND r.estado != 'cancelada' 
+                        AND r.fecha_hora_inicio < %s 
+                        AND r.fecha_hora_fin > %s
                     )
                 """
-                params = [fecha, hora_fin, hora_inicio, hora_fin, hora_inicio, hora_inicio, hora_fin]
-
+                
+                params = [fin_solicitado, inicio_solicitado]
+                
                 if id_deporte:
                     query += " AND c.id_deporte = %s"
                     params.append(id_deporte)
-
+                    
                 cursor.execute(query, params)
                 return cursor.fetchall()
         finally:
             conn.close()
-    #def 
+    @staticmethod
+    def verificar_formato_fecha(fecha):
+        from datetime import datetime
+        try:
+            datetime.strptime(fecha, '%Y-%m-%d')
+            return True
+        except ValueError:
+            return False
+    @staticmethod
+    def verificar_formato_hora(hora):
+        from datetime import datetime
+        try:
+            datetime.strptime(hora, '%H:%M:%S')
+            return True
+        except ValueError:
+            return False
+        
