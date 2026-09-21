@@ -49,18 +49,20 @@ class ReservasRepository:
             conn.close()
 
     @staticmethod
-    def verificar_superposicion(id_cancha, fecha, hora_inicio, duracion_horas):
+    def verificar_superposicion(id_cancha, inicio, fin):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "SELECT id FROM reservas WHERE id_cancha = %s AND fecha = %s AND "
-                    "(hora_inicio < ADDTIME(%s, SEC_TO_TIME(%s * 3600)) AND ADDTIME(hora_inicio, SEC_TO_TIME(duracion_horas * 3600)) > %s)",
-                    (id_cancha, fecha, hora_inicio, duracion_horas, hora_inicio)
+                    "SELECT id FROM reservas "
+                    "WHERE id_cancha = %s AND estado = 'confirmada' "
+                    "AND fecha_hora_inicio < %s AND  fecha_hora_fin > %s",
+                    (id_cancha, fin, inicio)
                 )
                 return cursor.fetchone()
-        finally:
+        finally: 
             conn.close()
+                   
 
     @staticmethod
     def crear(id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total):
