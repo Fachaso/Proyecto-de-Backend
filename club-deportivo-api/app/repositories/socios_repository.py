@@ -66,3 +66,14 @@ class SociosRepository:
                 return cursor.rowcount > 0
         finally:
             conn.close()
+            
+    @staticmethod
+    def tiene_reservas_asociadas(socio_id):
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                query = "SELECT id FROM reservas WHERE id_socio = %s AND estado = 'confirmada'"
+                cursor.execute(query, (socio_id,))
+                return cursor.fetchone() is not None
+        finally:
+            conn.close()
