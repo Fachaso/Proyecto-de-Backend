@@ -56,13 +56,37 @@ class CanchasService:
         activa = bool(data.get('activa', True))
 
         if not nombre or not id_deporte or precio_hora is None:
-            return {'error': 'Campos obligatorios faltantes'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Campos obligatorios faltantes",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         if not isinstance(precio_hora, int) or precio_hora <= 0:
-            return {'error': 'El precio_hora debe ser un entero positivo'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "El precio_hora debe ser un entero positivo",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         if not CanchasRepository.verificar_deporte(id_deporte):
-            return {'error': 'Deporte no encontrado'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Deporte no encontrado",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         cancha_id = CanchasRepository.crear(id_deporte, nombre, precio_hora, techada, activa)
 
@@ -79,7 +103,15 @@ class CanchasService:
     def actualizar_cancha(cancha_id, data):
         cancha_actual = CanchasRepository.obtener_por_id(cancha_id)
         if not cancha_actual:
-            return {'error': 'Cancha no encontrada'}, 404
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Cancha no encontrada",
+                        "level": "error"
+                    }
+                ]
+            }, 404
 
         fields = []
         params = []
@@ -87,21 +119,47 @@ class CanchasService:
         if 'nombre' in data:
             nombre = str(data['nombre']).strip()
             if not nombre:
-                return {'error': 'El nombre no puede estar vacío'}, 400
+                return {
+                    "errors": [
+                        {
+                            "code": "BAD_REQUEST",
+                            "message": "El nombre no puede estar vacío",
+                            "level": "error"
+                        }
+                    ]
+                }, 400
             fields.append("nombre = %s")
             params.append(nombre)
 
         if 'id_deporte' in data:
             id_deporte = data['id_deporte']
             if not CanchasRepository.verificar_deporte(id_deporte):
-                return {'error': 'Deporte no encontrado'}, 400
+                return {
+                    "errors": [
+                        {
+                            "code": "BAD_REQUEST",
+                            "message": "Deporte no encontrado",
+                            "level": "error"
+                        }
+                    ]
+                }, 400
+                
             fields.append("id_deporte = %s")
             params.append(id_deporte)
 
         if 'precio_hora' in data:
             precio_hora = data['precio_hora']
             if not isinstance(precio_hora, int) or precio_hora <= 0:
-                return {'error': 'El precio_hora debe ser un entero positivo'}, 400
+                return {
+                    "errors": [
+                        {
+                            "code": "BAD_REQUEST",
+                            "message": "El precio_hora debe ser un entero positivo",
+                            "level": "error"
+                        }
+                    ]
+                }, 400
+
             fields.append("precio_hora = %s")
             params.append(precio_hora)
 
@@ -114,7 +172,15 @@ class CanchasService:
             params.append(bool(data['activa']))
 
         if not fields:
-            return {'error': 'No hay campos para actualizar'}, 400
+            return {
+                    "errors": [
+                        {
+                            "code": "BAD_REQUEST",
+                            "message": "No hay campos para actualizar",
+                            "level": "error"
+                        }
+                    ]
+                }, 400
 
         CanchasRepository.actualizar(cancha_id, fields, params)
         return CanchasService.obtener_por_id(cancha_id), 200
@@ -122,10 +188,26 @@ class CanchasService:
     @staticmethod
     def eliminar_cancha(cancha_id):
         if not CanchasRepository.obtener_por_id(cancha_id):
-            return {'error': 'Cancha no encontrada'}, 404
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Cancha no encontrada",
+                        "level": "error"
+                    }
+                ]
+            }, 404
 
         if CanchasRepository.verificar_reservas_asociadas(cancha_id):
-            return {'error': 'No se puede eliminar una cancha con reservas asociadas'}, 409
+            return {
+                "errors": [
+                    {
+                        "code": "CONFLICT",
+                        "message": "No se puede eliminar una cancha con reservas asociadas",
+                        "level": "error"
+                    }
+                ]
+            }, 409
 
         CanchasRepository.eliminar(cancha_id)
         return None, 204
@@ -133,13 +215,37 @@ class CanchasService:
     @staticmethod
     def obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte):
         if not CanchasRepository.verificar_formato_fecha(fecha):
-            return {'error': 'Formato de fecha inválido. Se espera YYYY-MM-DD'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Formato de fecha inválido. Se espera YYYY-MM-DD",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         if not CanchasRepository.verificar_formato_hora(hora_inicio) or not CanchasRepository.verificar_formato_hora(hora_fin):
-            return {'error': 'Formato de hora inválido. Se espera HH:MM'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Formato de hora inválido. Se espera HH:MM",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         if hora_inicio >= hora_fin:
-            return {'error': 'La hora de inicio debe ser menor que la hora de fin'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "La hora de inicio debe ser menor que la hora de fin",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
         canchas_disponibles = CanchasRepository.obtener_canchas_disponibles(fecha, hora_inicio, hora_fin, id_deporte)
         for c in canchas_disponibles:
