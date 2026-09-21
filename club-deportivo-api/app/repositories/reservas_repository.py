@@ -72,12 +72,15 @@ class ReservasRepository:
                    
 
     @staticmethod
-    def crear(id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total):
+    def crear(id_cancha, id_socio, fecha_hora_inicio, fecha_hora_fin, precio_total, estado='confirmada'):
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                query = "INSERT INTO reservas (id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total) VALUES (%s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total))
+                query = (
+                    "INSERT INTO reservas (id_cancha, id_socio, fecha_hora_inicio, fecha_hora_fin, precio_total, estado) " 
+                    "VALUES (%s, %s, %s, %s, %s, %s)"
+                )
+                cursor.execute(query, (id_cancha, id_socio, fecha_hora_inicio, fecha_hora_fin, precio_total, estado))
                 conn.commit()
                 return cursor.lastrowid
         finally:
