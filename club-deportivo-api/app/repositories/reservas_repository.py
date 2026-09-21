@@ -11,7 +11,10 @@ class ReservasRepository:
                 cursor.execute(count_query, params)
                 total = cursor.fetchone()['total']
 
-                data_query = f"SELECT id, id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total FROM reservas{where_sql} ORDER BY id ASC LIMIT %s OFFSET %s"
+                data_query = (
+                    f"SELECT id, id_cancha, id_socio, fecha_hora_inicio, fecha_hora_fin, estado, precio_total "
+                    f"FROM reservas{where_sql} ORDER BY id ASC LIMIT %s OFFSET %s"
+                )
                 cursor.execute(data_query, params + [limit, offset])
                 reservas = cursor.fetchall()
                 return reservas, total
@@ -23,7 +26,11 @@ class ReservasRepository:
         conn = get_db_connection()
         try:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id, id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total FROM reservas WHERE id = %s", (reserva_id,))
+                cursor.execute(
+                    "SELECT id, id_cancha, id_socio, fecha_hora_inicio, fecha_hora_fin, estado, precio_total "
+                    "FROM reservas WHERE id = %s",
+                    (reserva_id,)
+                )
                 return cursor.fetchone()
         finally:
             conn.close()
