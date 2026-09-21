@@ -44,7 +44,7 @@ class CanchasRepository:
         try:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT id FROM reservas WHERE id_cancha = %s LIMIT 1", (cancha_id,))
-                return cursor.fetchone()
+                return cursor.fetchone() is not None
         finally:
             conn.close()
 
