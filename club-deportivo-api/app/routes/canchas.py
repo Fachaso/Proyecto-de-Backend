@@ -3,7 +3,7 @@ from app.services.canchas_service import CanchasService
 from app.utils.pagination import get_pagination_params, build_pagination_response
 
 canchas_bp = Blueprint('canchas', __name__, url_prefix='/canchas')
-
+  
 @canchas_bp.route('', methods=['GET'])
 def get_canchas():
     limit, offset = get_pagination_params()
@@ -19,51 +19,6 @@ def get_canchas():
 
     response = build_pagination_response('canchas', canchas, total, limit, offset, '/canchas', extra_params)
     return jsonify(response), 200
-
-@canchas_bp.route('/<int:cancha_id>', methods=['GET'])
-def get_cancha_by_id(cancha_id):
-    cancha = CanchasService.obtener_por_id(cancha_id)
-    if not cancha:
-        return jsonify({
-            "errors": [
-                {
-                    "code": "RECURSO_NO_ENCONTRADO",
-                    "message": "Cancha no encontrada",
-                    "level": "error",
-                    "description": f"No existe una cancha con el id {cancha_id}"
-                }
-            ]
-        }), 404
-    return jsonify(cancha), 200
-
-@canchas_bp.route('', methods=['POST'])
-def create_cancha():
-    data = request.get_json() or {}
-    resultado, status_code = CanchasService.crear_cancha(data)
-    
-    if status_code == 201:
-        headers = {}
-        if isinstance(resultado, dict) and 'id' in resultado: 
-            headers['Location'] = f"/canchas/{resultado['id']}"
-        return ''. 201, headers
-        
-    return jsonify(resultado), status_code
-
-@canchas_bp.route('/<int:cancha_id>', methods=['PATCH'])
-def update_cancha(cancha_id):
-    data = request.get_json() or {}
-    resultado, status_code = CanchasService.actualizar_cancha(cancha_id, data)
-    if status_code == 204:
-        return '', 204
-    return jsonify(resultado), status_code
-
-@canchas_bp.route('/<int:cancha_id>', methods=['DELETE'])
-def delete_cancha(cancha_id):
-    resultado, status_code = CanchasService.eliminar_cancha(cancha_id)
-    if status_code  == 204:
-        return '', 204
-    return jsonify(resultado), status_code
-   
 
 @canchas_bp.route('/disponibles', methods=['GET'])
 def get_canchas_disponibles():
@@ -92,4 +47,51 @@ def get_canchas_disponibles():
     if not resultado:
         return '', 204
 
-    return jsonify({"canchas": resultado}), 200
+    return jsonify(resultado), 200
+
+@canchas_bp.route('/<int:cancha_id>', methods=['GET'])
+def get_cancha_by_id(cancha_id):
+    cancha = CanchasService.obtener_por_id(cancha_id)
+    if not cancha:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "RECURSO_NO_ENCONTRADO",
+                    "message": "Cancha no encontrada",
+                    "level": "error",
+                    "description": f"No existe una cancha con el id {cancha_id}"
+                }
+            ]
+        }), 404
+    return jsonify(cancha), 200
+
+@canchas_bp.route('', methods=['POST'])
+def create_cancha():
+    data = request.get_json() or {}
+    resultado, status_code = CanchasService.crear_cancha(data)
+    
+    if status_code == 201:
+        headers = {}
+        if isinstance(resultado, dict) and 'id' in resultado: 
+            headers['Location'] = f"/canchas/{resultado['id']}"
+        return '', 201, headers
+        
+    return jsonify(resultado), status_code
+
+@canchas_bp.route('/<int:cancha_id>', methods=['PATCH'])
+def update_cancha(cancha_id):
+    data = request.get_json() or {}
+    resultado, status_code = CanchasService.actualizar_cancha(cancha_id, data)
+    if status_code == 204:
+        return '', 204
+    return jsonify(resultado), status_code
+
+@canchas_bp.route('/<int:cancha_id>', methods=['DELETE'])
+def delete_cancha(cancha_id):
+    resultado, status_code = CanchasService.eliminar_cancha(cancha_id)
+    if status_code  == 204:
+        return '', 204
+    return jsonify(resultado), status_code
+   
+
+
