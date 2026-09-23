@@ -53,14 +53,17 @@ def create_cancha():
 def update_cancha(cancha_id):
     data = request.get_json() or {}
     resultado, status_code = CanchasService.actualizar_cancha(cancha_id, data)
+    if status_code == 204:
+        return '', 204
     return jsonify(resultado), status_code
 
 @canchas_bp.route('/<int:cancha_id>', methods=['DELETE'])
 def delete_cancha(cancha_id):
     resultado, status_code = CanchasService.eliminar_cancha(cancha_id)
-    if resultado:
-        return jsonify(resultado), status_code
-    return '', status_code
+    if status_code  == 204:
+        return '', 204
+    return jsonify(resultado), status_code
+   
 
 @canchas_bp.route('/disponibles', methods=['GET'])
 def get_canchas_disponibles():
