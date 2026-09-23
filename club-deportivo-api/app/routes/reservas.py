@@ -26,6 +26,13 @@ def get_reserva_by_id(reserva_id):
 def create_reserva():
     data = request.get_json() or {}
     resultado, status_code = ReservasService.crear_reserva(data)
+
+    if status_code == 201:
+        headers = {}
+        if isinstance(resultado, dict) and 'id' in resultado:
+            headers['Location'] = f"/reservas/{resultado['id']}"
+        return '', 201, headers
+        
     return jsonify(resultado), status_code
 
 @reservas_bp.route('/<int:reserva_id>/estado', methods=['PUT'])
@@ -37,12 +44,17 @@ def update_reserva_estado(reserva_id):
         return jsonify({
             "errors": [
                 {
-                    "code": "BAD_REQUEST",
+                    "code": "ERROR_VALIDACION",
                     "message": "El campo 'estado' es obligatorio",
-                    "level": "error"
+                    "level": "error",
+                    "description": "Debe proporcionar el campo 'estado' en el cuerpo de la solicitud"
                 }
             ]
         }), 400
 
     resultado, status_code = ReservasService.actualizar_estado(reserva_id, nuevo_estado)
+
+    if status_code == 204:
+        return '', 204
+        
     return jsonify(resultado), status_code
