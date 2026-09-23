@@ -3,7 +3,7 @@ from app.repositories.reservas_repository import ReservasRepository
 class ReservasService:
 
     @staticmethod
-    def listar_reservas(limit, offset, id_cancha, fecha_hora_inicio):
+    def listar_reservas(limit, offset, id_cancha, fecha):
         where_clauses = []
         params = []
         extra_params = {}
@@ -12,7 +12,7 @@ class ReservasService:
             where_clauses.append("id_cancha = %s")
             params.append(id_cancha)
             extra_params['id_cancha'] = id_cancha
-
+            
         if fecha:
             where_clauses.append("fecha = %s")
             params.append(fecha)
@@ -26,16 +26,25 @@ class ReservasService:
             r['fecha'] = str(r['fecha'])
             r['hora_inicio'] = str(r['hora_inicio'])
 
-        return reservas, total, extra_params
+        return {"reservas": reservas}, 200 if reservas else 204
 
     @staticmethod
     def obtener_por_id(reserva_id):
         reserva = ReservasRepository.obtener_por_id(reserva_id)
         if not reserva:
-            return None
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Reserva no encontrada",
+                        "level": "error"
+                    }
+                ]
+            }, 404
+
         reserva['fecha'] = str(reserva['fecha'])
         reserva['hora_inicio'] = str(reserva['hora_inicio'])
-        return reserva
+        return reserva, 200
 
     @staticmethod
     def crear_reserva(data):
@@ -45,22 +54,68 @@ class ReservasService:
         hora_inicio = data.get('hora_inicio')
         duracion_horas = data.get('duracion_horas', 1)
 
+        # 1. Validar campos requeridos
         if not id_cancha or not id_socio or not fecha or not hora_inicio:
-            return {'error': 'Campos obligatorios faltantes'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Campos obligatorios faltantes",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
+        # 2. Validar existencia y estado de la cancha
         cancha = ReservasRepository.obtener_cancha(id_cancha)
         if not cancha:
-            return {'error': 'Cancha no encontrada'}, 404
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Cancha no encontrada",
+                        "level": "error"
+                    }
+                ]
+            }, 404
+
         if not cancha['activa']:
-            return {'error': 'La cancha especificada no está activa'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "La cancha especificada no está activa",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
-        usuario = ReservasRepository.obtener_usuario(id_socio)
-        if not usuario:
-            return {'error': 'Usuario no encontrado'}, 404
+        # 3. Validar existencia del socio
+        socio = ReservasRepository.obtener_usuario(id_socio)
+        if not socio:
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Socio no encontrado",
+                        "level": "error"
+                    }
+                ]
+            }, 404
 
+        # 4. Validar superposición de horarios en la cancha
         if ReservasRepository.verificar_superposicion(id_cancha, fecha, hora_inicio, duracion_horas):
-            return {'error': 'La cancha ya se encuentra reservada en ese horario'}, 409
+            return {
+                "errors": [
+                    {
+                        "code": "CONFLICT",
+                        "message": "La cancha ya se encuentra reservada en ese horario",
+                        "level": "error"
+                    }
+                ]
+            }, 409
 
+        # 5. Guardar la reserva
         precio_total = cancha['precio_hora'] * duracion_horas
         reserva_id = ReservasRepository.crear(id_cancha, id_socio, fecha, hora_inicio, duracion_horas, precio_total)
 
@@ -78,7 +133,15 @@ class ReservasService:
     def actualizar_estado(reserva_id, nuevo_estado):
         reserva = ReservasRepository.obtener_por_id(reserva_id)
         if not reserva:
-            return {'error': 'Reserva no encontrada'}, 404
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Reserva no encontrada",
+                        "level": "error"
+                    }
+                ]
+            }, 404
 
         ReservasRepository.actualizar_estado(reserva_id, nuevo_estado)
-        return {'message': 'Estado de la reserva actualizado correctamente'}, 200
+        return {"mensaje": "Estado de la reserva actualizado correctamente"}, 200

@@ -1,7 +1,7 @@
 from app.repositories.socios_repository import SociosRepository
 
 class SociosService:
-    
+
     @staticmethod
     def listar_socios(limit, offset, nombre, email, activo):
         where_clauses = []
@@ -27,48 +27,101 @@ class SociosService:
 
         socios, total = SociosRepository.obtener_con_filtros(where_sql, params, limit, offset)
 
+        if not socios:
+            return None, 204
+
         for s in socios:
             s['activo'] = bool(s['activo'])
 
-        return socios, total, extra_params
-    @staticmethod
-    def crear_socio(data):
-        nombre = str(data.get('nombre', '')).strip()
-        email = str(data.get('email', '')).strip()
-        activo = bool(data.get('activo', True))
-
-        if not nombre or not email:
-            return {'error': 'Campos obligatorios faltantes'}, 400
-
-        
-        if SociosRepository.verificar_email_existente(email):
-            return {'error': 'El email ya está registrado'}, 400
-
-        socio_id = SociosRepository.crear(nombre, email, activo)
-        return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 201
+        return {"socios": socios}, 200
 
     @staticmethod
     def obtener_por_id(socio_id):
         socio = SociosRepository.obtener_por_id(socio_id)
         if not socio:
-            return None
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Socio no encontrado",
+                        "level": "error"
+                    }
+                ]
+            }, 404
+
         socio['activo'] = bool(socio['activo'])
-        return socio
+        return socio, 200
+
+    @staticmethod
+    def crear_socio(data):
+        nombre = str(data.get('nombre', '')).strip()
+        email = str(data.get('email', '')).strip().lower()
+        activo = bool(data.get('activo', True))
+
+        if not nombre or not email:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Campos obligatorios faltantes",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+        if SociosRepository.verificar_email_existente(email):
+            return {
+                "errors": [
+                    {
+                        "code": "CONFLICT",
+                        "message": "El correo electrónico ya se encuentra registrado",
+                        "level": "error"
+                    }
+                ]
+            }, 409
+
+        socio_id = SociosRepository.crear(nombre, email, activo)
+        return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 201
 
     @staticmethod
     def actualizar_socio(socio_id, data):
         socio = SociosRepository.obtener_por_id(socio_id)
         if not socio:
-            return {'error': 'Socio no encontrado'}, 404
+            return {
+                "errors": [
+                    {
+                        "code": "NOT_FOUND",
+                        "message": "Socio no encontrado",
+                        "level": "error"
+                    }
+                ]
+            }, 404
 
         nombre = str(data.get('nombre', socio['nombre'])).strip()
-        email = str(data.get('email', socio['email'])).strip()
+        email = str(data.get('email', socio['email'])).strip().lower()
         activo = bool(data.get('activo', socio['activo']))
 
         if not nombre or not email:
-            return {'error': 'Campos obligatorios faltantes'}, 400
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "Campos obligatorios faltantes",
+                        "level": "error"
+                    }
+                ]
+            }, 400
 
-        if email.lower() != socio['email'].lower() and SociosRepository.verificar_email_existente(email):
-            return {'error': 'El email ya está registrado'}, 400
+        if email != socio['email'].lower() and SociosRepository.verificar_email_existente(email):
+            return {
+                "errors": [
+                    {
+                        "code": "CONFLICT",
+                        "message": "El correo electrónico ya se encuentra registrado",
+                        "level": "error"
+                    }
+                ]
+            }, 409
+
         SociosRepository.actualizar(socio_id, nombre, email, activo)
         return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 200
