@@ -40,6 +40,13 @@ def get_cancha_by_id(cancha_id):
 def create_cancha():
     data = request.get_json() or {}
     resultado, status_code = CanchasService.crear_cancha(data)
+    
+    if status_code == 201:
+        headers = {}
+        if isinstance(resultado, dict) and 'id' in resultado: 
+            headers['Location'] = f"/canchas/{resultado['id']}"
+        return ''. 201, headers
+        
     return jsonify(resultado), status_code
 
 @canchas_bp.route('/<int:cancha_id>', methods=['PATCH'])
@@ -68,7 +75,7 @@ def get_canchas_disponibles():
                 {
                     "code": "ERROR_VALIDACION",
                     "message": "Parámetros fecha, hora_inicio y hora_fin son requeridos",
-                    "level": "error"
+                    "level": "error",
                     "description": "Debe proporcionar fecha, hora_inicio y hora_fin para consultar disponibilidad"
                 }
             ]
