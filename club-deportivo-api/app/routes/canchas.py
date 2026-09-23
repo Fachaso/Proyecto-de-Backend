@@ -27,9 +27,10 @@ def get_cancha_by_id(cancha_id):
         return jsonify({
             "errors": [
                 {
-                    "code": "NOT_FOUND",
+                    "code": "RECURSO_NO_ENCONTRADO",
                     "message": "Cancha no encontrada",
-                    "level": "error"
+                    "level": "error",
+                    "description": f"No existe una cancha con el id {cancha_id}"
                 }
             ]
         }), 404
@@ -65,9 +66,10 @@ def get_canchas_disponibles():
         return jsonify({
             "errors": [
                 {
-                    "code": "BAD_REQUEST",
+                    "code": "ERROR_VALIDACION",
                     "message": "Parámetros fecha, hora_inicio y hora_fin son requeridos",
                     "level": "error"
+                    "description": "Debe proporcionar fecha, hora_inicio y hora_fin para consultar disponibilidad"
                 }
             ]
         }), 400
