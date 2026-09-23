@@ -22,6 +22,13 @@ def get_socios():
 def create_socio():
     data = request.get_json() or {}
     resultado, status_code = SociosService.crear_socio(data)
+
+    if status_code == 201:
+        headers = {}
+        if isinstance(resultado, dict) and 'id' in resultado:
+            headers['Location'] = f"/socios/{resultado['id']}"
+        return '', 201, headers
+        
     return jsonify(resultado), status_code
 
 @socios_bp.route('/<int:socio_id>', methods=['GET'])
@@ -33,4 +40,8 @@ def get_socio_by_id(socio_id):
 def update_socio(socio_id):
     data = request.get_json() or {}
     resultado, status_code = SociosService.actualizar_socio(socio_id, data)
+
+    if status_code == 204:
+        return '', 204
+        
     return jsonify(resultado), status_code
