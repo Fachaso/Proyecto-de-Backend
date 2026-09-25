@@ -1,11 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from app.services.reservas_service import (
-    actualizar_estado,
-    crear_reserva,
-    listar_reservas,
-    obtener_por_id,
-)
+import app.services.reservas_service as reservas_service
 from app.utils.pagination import get_pagination_params
 
 
@@ -16,9 +11,12 @@ reservas_bp = Blueprint("reservas", __name__, url_prefix="/reservas")
 def get_reservas():
     limit, offset = get_pagination_params()
     id_cancha = request.args.get("id_cancha")
-    fecha = request.args.get("fecha")
+    id_socio = request.args.get("id_socio")
+    estado = request.args.get("estado")
+    fecha_desde = request.args.get("fecha_desde")
+    fecha_hasta = request.args.get("fecha_hasta")
 
-    resultado, status_code = listar_reservas(
+    resultado, status_code = reservas_service.listar_reservas(
         limit,
         offset,
         id_cancha,
@@ -33,14 +31,14 @@ def get_reservas():
 
 @reservas_bp.route("/<int:reserva_id>", methods=["GET"])
 def get_reserva_by_id(reserva_id):
-    resultado, status_code = obtener_por_id(reserva_id)
+    resultado, status_code = reservas_service.obtener_por_id(reserva_id)
     return jsonify(resultado), status_code
 
 
 @reservas_bp.route("", methods=["POST"])
 def create_reserva():
     data = request.get_json() or {}
-    resultado, status_code = crear_reserva(data)
+    resultado, status_code = reservas_service.crear_reserva(data)
 
     if status_code == 201:
         return "", 201, {
@@ -66,7 +64,7 @@ def update_reserva_estado(reserva_id):
             ]
         }), 400
 
-    resultado, status_code = actualizar_estado(
+    resultado, status_code = reservas_service.actualizar_estado(
         reserva_id,
         nuevo_estado,
     )
