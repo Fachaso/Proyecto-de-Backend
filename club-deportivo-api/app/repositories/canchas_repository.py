@@ -4,10 +4,7 @@ def obtener_con_filtros(where_sql, params, limit, offset):
     conn = db.get_db_connection()
     cursor = conn.cursor()
     try:
-        count_query = (
-            f"SELECT COUNT(*) AS total "
-            f"FROM canchas{where_sql}"
-        )
+        count_query = f"SELECT COUNT(*) AS total FROM canchas {where_sql}
         cursor.execute(count_query, params)
         total = cursor.fetchone()["total"]
 
@@ -18,13 +15,8 @@ def obtener_con_filtros(where_sql, params, limit, offset):
             f"LIMIT %s OFFSET %s"
         )
 
-        cursor.execute(
-            data_query,
-            params + [limit, offset],
-        )
-
+        cursor.execute(data_query, params + [limit, offset])
         canchas = cursor.fetchall()
-
         return canchas, total
 
     finally:
@@ -110,8 +102,8 @@ def crear(id_deporte, nombre, precio_hora, techada, activa):
                 id_deporte,
                 nombre,
                 precio_hora,
-                techada,
-                activa,
+                1 if techada else 0,
+                1 if activa else 0,
             ),
         )
         conn.commit()
@@ -172,7 +164,7 @@ def obtener_canchas_disponibles(
     cursor = conn.cursor()
     try:
         where_clauses = [
-            "c.activa = TRUE",
+            "c.activa = 1",
             """
             NOT EXISTS (
                 SELECT 1
@@ -196,45 +188,22 @@ def obtener_canchas_disponibles(
 
         if techada is not None:
             where_clauses.append("c.techada = %s")
-            params.append(techada)
+            params.append(1 if techada else 0)
 
-        where_sql = (
-            " WHERE "
-            + " AND ".join(where_clauses)
-        )
+        where_sql = " WHERE " + " AND ".join(where_clauses)
 
-        count_query = (
-            f"SELECT COUNT(*) AS total "
-            f"FROM canchas c"
-            f"{where_sql}"
-        )
-
-        cursor.execute(
-            count_query,
-            params,
-        )
-
+        count_query = f"SELECT COUNT (*) AS total FROM canchas c {where_sql}"
+        cursor.execute(count_query, params)
         total = cursor.fetchone()["total"]
 
         data_query = (
-            f"SELECT "
-            f"c.id, "
-            f"c.id_deporte, "
-            f"c.nombre, "
-            f"c.precio_hora, "
-            f"c.techada, "
-            f"c.activa "
-            f"FROM canchas c"
-            f"{where_sql} "
+            f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activada "
+            f"FROM canchas c {where:sql} " 
             f"ORDER BY c.id ASC "
             f"LIMIT %s OFFSET %s"
         )
 
-        cursor.execute(
-            data_query,
-            params + [limit, offset],
-        )
-
+        cursor.execute(data_query, params + [limit, offset])
         canchas = cursor.fetchall()
 
         return canchas, total
