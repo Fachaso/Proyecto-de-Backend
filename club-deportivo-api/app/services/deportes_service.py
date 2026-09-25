@@ -1,14 +1,10 @@
-from app.repositories.deportes_repository import DeportesRepository
+from app.repositories.deportes_repository import obtener_todos
 
-class DeportesService:
 
-    @staticmethod
-    def listar_deportes():
-        deportes = DeportesRepository.obtener_todos()
-        
-        # 1. Si no hay deportes guardados, se responde con status 204
-        if not deportes:
-            return None, 204
+def listar_deportes():
+    deportes = obtener_todos()
 
-        # 2. Si hay deportes, se devuelven envueltos en el objeto {"deportes": [...]} con status 200
-        return {"deportes": deportes}, 200
+    if not deportes:
+        return None, 204
+
+    return {"deportes": deportes}, 200
