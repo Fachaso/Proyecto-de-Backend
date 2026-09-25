@@ -11,7 +11,7 @@
 * Lucas Nahuel Uran -116478 - luran@fi.uba.ar
 * Pablo Martin Cantoni Noblia -115568 -pcantoni@fi.uba.ar
 * Tiziana Gonzalez -116294
-* Julieta Nagera -114474
+* Julieta Nágera - 114474 - jnagera@fi.uba.ar
 * Guadalupe Fernandez -115583
 * Sarai Slavkis -114351 -sslavkis@fi.uba.ar
 *
