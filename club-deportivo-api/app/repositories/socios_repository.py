@@ -1,7 +1,5 @@
 import app.db as db
 
-import app.db as db
-
 def obtener_por_id(reserva_id):
     conn = db.get_db_connection()
     cursor = conn.cursor()
@@ -21,9 +19,17 @@ def obtener_por_id(reserva_id):
         conn.close()
 
 
-def crear(id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, estado, precio_total):
+def crear(
+    id_socio,
+    id_cancha,
+    fecha_hora_inicio,
+    fecha_hora_fin,
+    precio_hora,
+    precio_total,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         query = """
             INSERT INTO reservas (
@@ -31,11 +37,12 @@ def crear(id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, estado, precio
                 id_cancha,
                 fecha_hora_inicio,
                 fecha_hora_fin,
-                estado,
-                precio_total
+                tarifa_historica,
+                total
             )
             VALUES (%s, %s, %s, %s, %s, %s)
         """
+
         cursor.execute(
             query,
             (
@@ -43,17 +50,17 @@ def crear(id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, estado, precio
                 id_cancha,
                 fecha_hora_inicio,
                 fecha_hora_fin,
-                estado,
+                precio_hora,
                 precio_total,
             ),
         )
+
         conn.commit()
         return cursor.lastrowid
 
     finally:
         cursor.close()
         conn.close()
-
 
 def actualizar_estado(reserva_id, nuevo_estado):
     conn = db.get_db_connection()
