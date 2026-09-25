@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from app.services.deportes_service import listar_deportes
+import app.services.deportes_service as deportes_service
 
 
 deportes_bp = Blueprint("deportes", __name__, url_prefix="/deportes")
