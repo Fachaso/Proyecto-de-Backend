@@ -198,7 +198,7 @@ def obtener_canchas_disponibles(
 
         data_query = (
             f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activada "
-            f"FROM canchas c {where:sql} " 
+            f"FROM canchas c {where_sql} " 
             f"ORDER BY c.id ASC "
             f"LIMIT %s OFFSET %s"
         )
