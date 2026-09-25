@@ -12,7 +12,7 @@
 * Pablo Martin Cantoni Noblia -115568 -pcantoni@fi.uba.ar
 * Tiziana Gonzalez -116294
 * Julieta Nágera - 114474 - jnagera@fi.uba.ar
-* Guadalupe Fernandez -115583
+* Guadalupe Fernandez - 115583 - bgfernandez@fi.uba.ar
 * Sarai Slavkis -114351 -sslavkis@fi.uba.ar
 *
 ---
