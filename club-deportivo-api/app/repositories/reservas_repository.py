@@ -1,4 +1,4 @@
-from app.db import get_db_connection
+import app.db as db
 
 
 CAMPOS_RESERVA = """
@@ -15,7 +15,7 @@ CAMPOS_RESERVA = """
 
 
 def obtener_con_filtros(where_sql, params, limit, offset):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -40,7 +40,7 @@ def obtener_con_filtros(where_sql, params, limit, offset):
 
 
 def obtener_por_id(reserva_id):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -56,7 +56,7 @@ def obtener_por_id(reserva_id):
 
 
 def obtener_cancha(id_cancha):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -72,7 +72,7 @@ def obtener_cancha(id_cancha):
 
 
 def obtener_socio(id_socio):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -86,8 +86,8 @@ def obtener_socio(id_socio):
         conn.close()
 
 
-def verificar_superposicion(id_cancha, fecha_hora_inicio, fecha_hora_fin):
-    conn = get_db_connection()
+def verificar_superposicion_cancha(id_cancha, fecha_hora_inicio, fecha_hora_fin):
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -105,6 +105,30 @@ def verificar_superposicion(id_cancha, fecha_hora_inicio, fecha_hora_fin):
         cursor.close()
         conn.close()
 
+def verificar_superposicion_socio(id_socio,fecha_hora_inicio,fecha_hora_fin,):
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT id FROM reservas "
+            "WHERE id_socio = %s "
+            "AND estado = 'confirmada' "
+            "AND fecha_hora_inicio < %s "
+            "AND fecha_hora_fin > %s "
+            "LIMIT 1",
+            (
+                id_socio,
+                fecha_hora_fin,
+                fecha_hora_inicio,
+            ),
+        )
+
+        return cursor.fetchone() is not None
+
+    finally:
+        cursor.close()
+        conn.close()
 
 def crear(
     id_cancha,
@@ -114,7 +138,7 @@ def crear(
     tarifa_historica,
     total,
 ):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -140,7 +164,7 @@ def crear(
 
 
 def actualizar_estado(reserva_id, nuevo_estado):
-    conn = get_db_connection()
+    conn = db.get_db_connection()
     cursor = conn.cursor()
 
     try:
