@@ -11,7 +11,18 @@ def listar_socios(limit,offset,nombre,activo,):
         extra_params['nombre'] = nombre
 
 
-    if activo in ['true', 'false']:
+    if activo is not None:
+        if activo not in ['true', 'false']:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "activo debe ser true o false",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
         where_clauses.append("activo = %s")
         params.append(1 if activo == 'true' else 0)
         extra_params['activo'] = activo
