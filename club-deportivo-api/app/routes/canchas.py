@@ -11,14 +11,22 @@ canchas_bp = Blueprint(
 )
 
 
-@canchas_bp.route(
-    "",
-    methods=["GET"],
-)
+@canchas_bp.route("",methods=["GET"],)
 def get_canchas():
-    limit, offset = (
+    limit, offset, error = (
         pagination.get_pagination_params()
     )
+
+    if error:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": error,
+                    "level": "error",
+                }
+            ]
+        }), 400
 
     id_deporte = request.args.get(
         "id_deporte"
