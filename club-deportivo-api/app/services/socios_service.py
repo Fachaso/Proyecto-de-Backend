@@ -37,7 +37,11 @@ def listar_socios(limit,offset,nombre,activo,):
     for s in socios:
         s['activo'] = bool(s['activo'])
 
-    return {"socios": socios}, 200
+    return {
+        "socios": socios,
+        "total": total,
+        "extra_params": extra_params,
+    }, 200
 
 def obtener_por_id(socio_id):
     socio = socios_repository.obtener_por_id(socio_id)
