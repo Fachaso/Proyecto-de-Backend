@@ -76,14 +76,22 @@ def get_canchas():
     return jsonify(response), 200
 
 
-@canchas_bp.route(
-    "/disponibles",
-    methods=["GET"],
-)
+@canchas_bp.route("/disponibles", methods=["GET"],)
 def get_canchas_disponibles():
-    limit, offset = (
+    limit, offset, error = (
         pagination.get_pagination_params()
     )
+
+    if error:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": error,
+                    "level": "error",
+                }
+            ]
+        }), 400
 
     fecha = request.args.get(
         "fecha"
