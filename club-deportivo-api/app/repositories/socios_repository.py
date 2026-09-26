@@ -1,12 +1,7 @@
 import app.db as db
 
 
-def obtener_con_filtros(
-    where_sql,
-    params,
-    limit,
-    offset,
-):
+def obtener_con_filtros(where_sql,params,limit,offset,):
     conn = db.get_db_connection()
     cursor = conn.cursor()
 
@@ -86,11 +81,7 @@ def verificar_email_existente(email):
         conn.close()
 
 
-def crear(
-    nombre,
-    email,
-    activo,
-):
+def crear(nombre,email,activo,):
     conn = db.get_db_connection()
     cursor = conn.cursor()
 
@@ -120,12 +111,7 @@ def crear(
         conn.close()
 
 
-def actualizar(
-    socio_id,
-    nombre,
-    email,
-    activo,
-):
+def actualizar(socio_id,nombre,email,activo,):
     conn = db.get_db_connection()
     cursor = conn.cursor()
 
