@@ -35,15 +35,17 @@ def get_socios():
     if status_code != 200:
         return jsonify(resultado), status_code
 
-    response = build_pagination_response("socios",resultado["socios"],resultado["total"],limit,
-    offset,"/socios",resultado["extra_params"],)
+    response = build_pagination_response(
+        "socios",
+        resultado["socios"],
+        resultado["total"],
+        limit,
+        offset,
+        "/socios",
+        resultado["extra_params"],
+    )
 
     return jsonify(response), 200
-    
-    if status_code == 204:
-        return '', 204
-        
-    return jsonify(resultado), status_code
 
 @socios_bp.route('', methods=['POST'])
 def create_socio():
