@@ -1,6 +1,6 @@
 import app.repositories.socios_repository as socios_repository
 
-def listar_socios(limit, offset, nombre, email, activo):
+def listar_socios(limit,offset,nombre,activo,):
     where_clauses = []
     params = []
     extra_params = {}
@@ -10,10 +10,6 @@ def listar_socios(limit, offset, nombre, email, activo):
         params.append(f"%{nombre.lower()}%")
         extra_params['nombre'] = nombre
 
-    if email:
-        where_clauses.append("LOWER(email) LIKE %s")
-        params.append(f"%{email.lower()}%")
-        extra_params['email'] = email
 
     if activo in ['true', 'false']:
         where_clauses.append("activo = %s")
