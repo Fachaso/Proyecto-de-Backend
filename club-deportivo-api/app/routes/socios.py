@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import app.services.socios_service as socios_service
-from app.utils.pagination import get_pagination_params
+from app.utils.pagination import (get_pagination_params,build_pagination_response,)
 
 socios_bp = Blueprint('socios', __name__, url_prefix='/socios')
 
@@ -10,7 +10,17 @@ def get_socios():
     nombre = request.args.get('nombre')
     activo = request.args.get('activo')
 
-    resultado, status_code = socios_service.listar_socios(limit, offset, nombre, activo)
+    resultado, status_code = socios_service.listar_socios(limit,offset,nombre,activo,)
+    if status_code == 204:
+        return '', 204
+
+    if status_code != 200:
+        return jsonify(resultado), status_code
+
+    response = build_pagination_response("socios",resultado["socios"],resultado["total"],limit,
+    offset,"/socios",resultado["extra_params"],)
+
+    return jsonify(response), 200
     
     if status_code == 204:
         return '', 204
