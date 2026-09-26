@@ -3,7 +3,6 @@ from flask import Blueprint, jsonify, request
 import app.services.reservas_service as reservas_service
 from app.utils.pagination import get_pagination_params
 
-
 reservas_bp = Blueprint("reservas", __name__, url_prefix="/reservas")
 
 
@@ -17,10 +16,13 @@ def get_reservas():
     fecha_hasta = request.args.get("fecha_hasta")
 
     resultado, status_code = reservas_service.listar_reservas(
-        limit,
-        offset,
-        id_cancha,
-        fecha,
+        limit=limit,
+        offset=offset,
+        id_cancha=id_cancha,
+        id_socio=id_socio,
+        estado=estado,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
     )
 
     if status_code == 204:
@@ -32,6 +34,8 @@ def get_reservas():
 @reservas_bp.route("/<int:reserva_id>", methods=["GET"])
 def get_reserva_by_id(reserva_id):
     resultado, status_code = reservas_service.obtener_por_id(reserva_id)
+    if status_code == 404:
+        return jsonify(resultado), 404
     return jsonify(resultado), status_code
 
 
@@ -41,9 +45,7 @@ def create_reserva():
     resultado, status_code = reservas_service.crear_reserva(data)
 
     if status_code == 201:
-        return "", 201, {
-            "Location": f"/reservas/{resultado['id']}"
-        }
+        return jsonify(resultado), 201, {"Location": f"/reservas/{resultado['id']}"}
 
     return jsonify(resultado), status_code
 
