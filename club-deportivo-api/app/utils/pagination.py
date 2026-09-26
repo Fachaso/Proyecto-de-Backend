@@ -1,21 +1,34 @@
 from flask import request
 
+
 def get_pagination_params():
     try:
-        limit = int(request.args.get('_limit', 10))
-        if limit < 1 or limit > 100:
-            limit = 10
+        limit = int(
+            request.args.get(
+                '_limit',
+                10,
+            )
+        )
     except (ValueError, TypeError):
-        limit = 10
+        return None, None, "_limit debe ser un entero"
+
+    if limit < 1 or limit > 100:
+        return None, None, "_limit debe estar entre 1 y 100"
 
     try:
-        offset = int(request.args.get('_offset', 0))
-        if offset < 0:
-            offset = 0
+        offset = int(
+            request.args.get(
+                '_offset',
+                0,
+            )
+        )
     except (ValueError, TypeError):
-        offset = 0
+        return None, None, "_offset debe ser un entero"
 
-    return limit, offset
+    if offset < 0:
+        return None, None, "_offset debe ser mayor o igual a 0"
+
+    return limit, offset, None
 
 def build_pagination_response(key_name, items, total, limit, offset, base_path, extra_params=None):
     if extra_params is None:
