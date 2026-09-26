@@ -8,10 +8,9 @@ socios_bp = Blueprint('socios', __name__, url_prefix='/socios')
 def get_socios():
     limit, offset = get_pagination_params()
     nombre = request.args.get('nombre')
-    email = request.args.get('email')
     activo = request.args.get('activo')
 
-    resultado, status_code = socios_service.listar_socios(limit, offset, nombre, email, activo)
+    resultado, status_code = socios_service.listar_socios(limit, offset, nombre, activo)
     
     if status_code == 204:
         return '', 204
