@@ -6,6 +6,24 @@ socios_bp = Blueprint('socios', __name__, url_prefix='/socios')
 
 @socios_bp.route('', methods=['GET'])
 def get_socios():
+    parametros_permitidos = {
+        "nombre",
+        "activo",
+        "_limit",
+        "_offset",
+    }
+
+    for parametro in request.args:
+        if parametro not in parametros_permitidos:
+            return jsonify({
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": f"Parámetro desconocido: {parametro}",
+                        "level": "error",
+                    }
+                ]
+            }), 400
     limit, offset = get_pagination_params()
     nombre = request.args.get('nombre')
     activo = request.args.get('activo')
