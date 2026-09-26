@@ -24,7 +24,18 @@ def get_socios():
                     }
                 ]
             }), 400
-    limit, offset = get_pagination_params()
+    limit, offset, error = get_pagination_params()
+
+    if error:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": error,
+                    "level": "error",
+                }
+            ]
+        }), 400
     nombre = request.args.get('nombre')
     activo = request.args.get('activo')
 
