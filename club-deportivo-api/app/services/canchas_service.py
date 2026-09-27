@@ -51,9 +51,11 @@ def listar_canchas(
         where_clauses.append(
             "id_deporte = %s"
         )
+
         params.append(
             id_deporte
         )
+
         extra_params[
             "id_deporte"
         ] = id_deporte
@@ -62,9 +64,11 @@ def listar_canchas(
         where_clauses.append(
             "LOWER(nombre) LIKE %s"
         )
+
         params.append(
             f"%{nombre.lower()}%"
         )
+
         extra_params[
             "nombre"
         ] = nombre
@@ -527,6 +531,7 @@ def actualizar_cancha(
         fields.append(
             "nombre = %s"
         )
+
         params.append(
             nombre
         )
@@ -556,6 +561,7 @@ def actualizar_cancha(
         fields.append(
             "precio_hora = %s"
         )
+
         params.append(
             precio_hora
         )
@@ -581,6 +587,7 @@ def actualizar_cancha(
         fields.append(
             "techada = %s"
         )
+
         params.append(
             data["techada"]
         )
@@ -606,6 +613,7 @@ def actualizar_cancha(
         fields.append(
             "activa = %s"
         )
+
         params.append(
             data["activa"]
         )
@@ -667,7 +675,7 @@ def eliminar_cancha(cancha_id):
 
 
 def obtener_canchas_disponibles(fecha,hora_inicio,hora_fin,id_deporte=None,techada=None,
-    limit=10,offset=0,):
+    limit=10, offset=0,):
     try:
         fecha_obj = datetime.strptime(
             fecha,
@@ -701,39 +709,63 @@ def obtener_canchas_disponibles(fecha,hora_inicio,hora_fin,id_deporte=None,techa
                 }
             ]
         }, 400
-    
-    if fecha_obj.strftime("%Y-%m-%d") != fecha:
+
+    if (
+        fecha_obj.strftime(
+            "%Y-%m-%d"
+        )
+        != fecha
+    ):
         return {
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "La fecha debe tener formato YYYY-MM-DD",
+                    "message": (
+                        "La fecha debe tener "
+                        "formato YYYY-MM-DD"
+                    ),
                     "level": "error",
                 }
             ]
         }, 400
 
-        if hora_inicio_obj.strftime("%H:%M:%S") != hora_inicio:
-            return {
-                "errors": [
-                    {
-                        "code": "BAD_REQUEST",
-                        "message": "hora_inicio debe tener formato HH:00:00",
-                        "level": "error",
-                    }
-                ]
-            }, 400
+    if (
+        hora_inicio_obj.strftime(
+            "%H:%M:%S"
+        )
+        != hora_inicio
+    ):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "hora_inicio debe tener "
+                        "formato HH:00:00"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }, 400
 
-        if hora_fin_obj.strftime("%H:%M:%S") != hora_fin:
-            return {
-                "errors": [
-                    {
-                        "code": "BAD_REQUEST",
-                        "message": "hora_fin debe tener formato HH:00:00",
-                        "level": "error",
-                    }
-                ]
-            }, 400
+    if (
+        hora_fin_obj.strftime(
+            "%H:%M:%S"
+        )
+        != hora_fin
+    ):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "hora_fin debe tener "
+                        "formato HH:00:00"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }, 400
 
     if (
         hora_inicio_obj.minute != 0
@@ -881,6 +913,7 @@ def obtener_canchas_disponibles(fecha,hora_inicio,hora_fin,id_deporte=None,techa
             id_deporte_convertido = int(
                 id_deporte
             )
+
         except (
             ValueError,
             TypeError,
