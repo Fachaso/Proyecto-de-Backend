@@ -46,9 +46,9 @@ def build_pagination_response(key_name, items, total, limit, offset, base_path, 
     return {
         key_name: items,
         "_links": {
-            "_first": make_url(0),
-            "_last": make_url(last_offset),
-            "_prev": make_url(max(0, offset - limit)) if offset > 0 else None,
-            "_next": make_url(offset + limit) if (offset + limit) < total else None
+            "_first": {"href": make_url(0)},
+            "_last": {"href": make_url(last_offset)},
+            "_prev": {"href": make_url(max(0, offset - limit))} if offset > 0 else None,
+            "_next": {"href": make_url(offset + limit)} if (offset + limit) < total else None
         }
     }

@@ -8,7 +8,17 @@ reservas_bp = Blueprint("reservas", __name__, url_prefix="/reservas")
 
 @reservas_bp.route("", methods=["GET"])
 def get_reservas():
-    limit, offset = get_pagination_params()
+    limit, offset, error = get_pagination_params()
+    if error:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": error,
+                    "level": "error",
+                }
+            ]
+        }), 400
     id_cancha = request.args.get("id_cancha")
     id_socio = request.args.get("id_socio")
     estado = request.args.get("estado")

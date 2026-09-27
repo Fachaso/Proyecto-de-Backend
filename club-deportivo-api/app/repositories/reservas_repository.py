@@ -3,13 +3,13 @@ import app.db as db
 
 CAMPOS_RESERVA = """
     id,
-    id_cancha,
     id_socio,
-    DATE_FORMAT(fecha_hora_inicio, '%Y-%m-%d') AS fecha,
-    DATE_FORMAT(fecha_hora_inicio, '%H:%i') AS hora_inicio,
-    DATE_FORMAT(fecha_hora_fin, '%H:%i') AS hora_fin,
+    id_cancha,
+    fecha_hora_inicio,
+    fecha_hora_inicio,
+    fecha_hora_fin,
     estado,
-    tarifa_historica,
+    tarifa_historica AS precio_hora,
     total AS precio_total
 """
 
