@@ -154,25 +154,92 @@ def create_reserva():
         resultado
     ), status_code
 
-@reservas_bp.route("/<int:reserva_id>/estado", methods=["PUT"])
+@reservas_bp.route(
+    "/<int:reserva_id>/estado",
+    methods=["PUT"],
+)
 def update_reserva_estado(reserva_id):
-    data = request.get_json() or {}
-    nuevo_estado = data.get("estado")
+    if request.args:
+        parametro = next(
+            iter(request.args)
+        )
 
-    if not nuevo_estado:
         return jsonify({
             "errors": [
                 {
-                    "code": "ERROR_VALIDACION",
-                    "message": "El campo 'estado' es obligatorio",
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        f"Parámetro desconocido: "
+                        f"{parametro}"
+                    ),
                     "level": "error",
                 }
             ]
         }), 400
 
-    resultado, status_code = reservas_service.actualizar_estado(
-        reserva_id,
-        nuevo_estado,
+    data = request.get_json(
+        silent=True
     )
 
-    return jsonify(resultado), status_code
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }), 400
+
+    campos_permitidos = {
+        "estado",
+    }
+
+    for campo in data:
+        if campo not in campos_permitidos:
+            return jsonify({
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": (
+                            f"Campo desconocido: "
+                            f"{campo}"
+                        ),
+                        "level": "error",
+                    }
+                ]
+            }), 400
+
+    if "estado" not in data:
+        return jsonify({
+            "errors": [
+                {
+                    "code": "ERROR_VALIDACION",
+                    "message": (
+                        "El campo 'estado' "
+                        "es obligatorio"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }), 400
+
+    nuevo_estado = data["estado"]
+
+    resultado, status_code = (
+        reservas_service.actualizar_estado(
+            reserva_id,
+            nuevo_estado,
+        )
+    )
+
+    if status_code == 204:
+        return "", 204
+
+    return jsonify(
+        resultado
+    ), status_code

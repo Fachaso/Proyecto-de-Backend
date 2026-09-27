@@ -523,63 +523,145 @@ def crear_reserva(data):
         "precio_total": precio_total,
     }, 201
 
-def actualizar_estado(reserva_id, nuevo_estado):
-    reserva = obtener_reserva_por_id(reserva_id)
-    if not reserva:
-        return respuesta_error( 
-            "RECURSO_NO_ENCONTRADO", "Reserva no encontrada", 404
+def actualizar_estado(reserva_id,nuevo_estado,):
+    reserva = (
+        obtener_reserva_por_id(
+            reserva_id
         )
-        
-    estado_actual = reserva["estado"]
+    )
 
-    if nuevo_estado not in {"cancelada", "finalizada"}:
+    if not reserva:
         return respuesta_error(
-            "ERROR_VALIDACION", 
-            "El nuevo estado solo puede ser 'cancelada' o 'finalizada'",
+            "RECURSO_NO_ENCONTRADO",
+            "Reserva no encontrada",
+            404,
+        )
+
+    if not isinstance(
+        nuevo_estado,
+        str,
+    ):
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "estado debe ser un string",
             400,
         )
-        
+
+    estados_validos = {
+        "confirmada",
+        "cancelada",
+        "finalizada",
+    }
+
+    if nuevo_estado not in estados_validos:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            (
+                "El estado debe ser "
+                "'confirmada', 'cancelada' "
+                "o 'finalizada'"
+            ),
+            400,
+        )
+
+    estado_actual = reserva[
+        "estado"
+    ]
+
     if estado_actual == nuevo_estado:
-        reserva["fecha_hora_inicio"] = format_iso_datetime(
-            reserva["fecha_hora_inicio"]
-        )
-        reserva["fecha_hora_fin"] = format_iso_datetime(
-            reserva["fecha_hora_fin"]
-        )
-        return reserva, 200
+        return None, 204
 
-    if estado_actual in {"cancelada", "finalizada"}:
+    if estado_actual in {
+        "cancelada",
+        "finalizada",
+    }:
         return respuesta_error(
             "RECURSO_SUPERPUESTO",
-            f"No se puede cambiar el estado de una reserva '{estado_actual}'",
+            (
+                "No se puede cambiar "
+                f"el estado de una reserva "
+                f"'{estado_actual}'"
+            ),
             409,
         )
-    
-    ahora = datetime.now(TZ_ARG)
-    fecha_inicio = parse_iso_datetime(reserva["fecha_hora_inicio"]) if isinstance(reserva["fecha_hora_inicio"], str) else reserva["fecha_hora_inicio"]
-    fecha_fin = parse_iso_datetime(reserva["fecha_hora_fin"]) if isinstance(reserva["fecha_hora_fin"], str) else reserva["fecha_hora_fin"]
 
-    if nuevo_estado == "cancelada" and ahora >= fecha_inicio:
+    fecha_inicio = reserva[
+        "fecha_hora_inicio"
+    ]
+
+    fecha_fin = reserva[
+        "fecha_hora_fin"
+    ]
+
+    if isinstance(
+        fecha_inicio,
+        str,
+    ):
+        fecha_inicio = (
+            datetime.fromisoformat(
+                fecha_inicio
+            )
+        )
+
+    if isinstance(
+        fecha_fin,
+        str,
+    ):
+        fecha_fin = (
+            datetime.fromisoformat(
+                fecha_fin
+            )
+        )
+
+    if fecha_inicio.tzinfo is None:
+        fecha_inicio = (
+            fecha_inicio.replace(
+                tzinfo=TZ_ARG
+            )
+        )
+
+    if fecha_fin.tzinfo is None:
+        fecha_fin = (
+            fecha_fin.replace(
+                tzinfo=TZ_ARG
+            )
+        )
+
+    ahora = datetime.now(
+        TZ_ARG
+    )
+
+    if (
+        nuevo_estado == "cancelada"
+        and ahora >= fecha_inicio
+    ):
         return respuesta_error(
             "RECURSO_SUPERPUESTO",
-            "Solo se pueden cancelar reservas antes de su hora de inicio", 
+            (
+                "Solo se pueden cancelar "
+                "reservas antes de su "
+                "hora de inicio"
+            ),
             409,
         )
-    if nuevo_estado == "finalizada" and ahora < fecha_fin:
+
+    if (
+        nuevo_estado == "finalizada"
+        and ahora < fecha_fin
+    ):
         return respuesta_error(
             "RECURSO_SUPERPUESTO",
-            "Solo se pueden finalizar reservas una vez alcanzada la hora de fin",
-            409, 
+            (
+                "Solo se pueden finalizar "
+                "reservas una vez alcanzada "
+                "la hora de fin"
+            ),
+            409,
         )
-    actualizar_estado_en_repo(reserva_id, nuevo_estado)
-    reserva_actualizada = obtener_reserva_por_id(reserva_id) 
 
-    if reserva_actualizada:
-        reserva_actualizada["fecha_hora_inicio"] = format_iso_datetime(
-            reserva_actualizada["fecha_hora_inicio"]
-        )
-        reserva_actualizada["fecha_hora_fin"] = format_iso_datetime(
-            reserva_actualizada["fecha_hora_fin"]
-        )
-        return reserva_actualizada, 200
-    return {"mensaje": "Estado de la reserva actualizado correctamente"}, 200
+    actualizar_estado_en_repo(
+        reserva_id,
+        nuevo_estado,
+    )
+
+    return None, 204
