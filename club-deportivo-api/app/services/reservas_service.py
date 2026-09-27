@@ -188,6 +188,13 @@ def crear_reserva(data):
     fecha_hora_inicio = parse_iso_datetime(data.get("fecha_hora_inicio"))
     fecha_hora_fin = parse_iso_datetime(data.get("fecha_hora_fin"))
 
+    if not fecha_hora_inicio or not fecha_hora_fin:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "Las fechas deben ser validas",
+            400,
+        )
+
     if fecha_hora_inicio.time().minute != 0 or fecha_hora_fin.time().minute != 0:
         return respuesta_error(
             "ERROR_VALIDACION", "La reserva debe comenzar y terminar en horas exactas", 400
