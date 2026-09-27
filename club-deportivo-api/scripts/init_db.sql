@@ -36,4 +36,54 @@ CREATE TABLE IF NOT EXISTS reservas (
     FOREIGN KEY (id_cancha) REFERENCES canchas(id)
 );
 
-INSERT INTO deportes (nombre) VALUES ('Fútbol'), ('Tenis'), ('Pádel');
+
+INSERT IGNORE INTO deportes (nombre)
+VALUES 
+    ('Fútbol'), 
+    ('Tenis'), 
+    ('Pádel');
+
+
+INSERT INTO canchas (id_deporte, nombre, precio_hora, techada, activa)
+SELECT id, 'Cancha Fútbol 1', 1000000, FALSE, TRUE
+FROM deportes WHERE nombre = 'Fútbol'
+AND NOT EXISTS (SELECT 1 FROM canchas WHERE nombre = 'Cancha Fútbol 1');
+
+INSERT INTO canchas (id_deporte, nombre, precio_hora, techada, activa)
+SELECT id, 'Cancha Tenis 1', 800000, TRUE, TRUE
+FROM deportes WHERE nombre = 'Tenis'
+AND NOT EXISTS (SELECT 1 FROM canchas WHERE nombre = 'Cancha Tenis 1');
+
+INSERT INTO canchas (id_deporte, nombre, precio_hora, techada, activa)
+SELECT id, 'Cancha Pádel 1', 900000, TRUE, FALSE
+FROM deportes WHERE nombre = 'Pádel'
+AND NOT EXISTS (SELECT 1 FROM canchas WHERE nombre = 'Cancha Pádel 1');
+
+
+INSERT IGNORE INTO socios (nombre, email, activo)
+VALUES 
+    ('Juan Pérez', 'juan.perez@example.com', TRUE),
+    ('María Gómez', 'maria.gomez@example.com', TRUE),
+    ('Pedro López', 'pedro.lopez@example.com', FALSE);
+
+
+INSERT INTO reservas (id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, tarifa_historica, total, estado)
+SELECT s.id, c.id, '2026-10-15 18:00:00', '2026-10-15 20:00:00', c.precio_hora, c.precio_hora * 2, 'confirmada'
+FROM socios s
+JOIN canchas c ON c.nombre = 'Cancha Fútbol 1'
+WHERE s.email = 'juan.perez@example.com'
+AND NOT EXISTS (
+    SELECT 1 FROM reservas r 
+    WHERE r.id_socio = s.id AND r.id_cancha = c.id AND r.fecha_hora_inicio = '2026-10-15 18:00:00'
+);
+
+
+INSERT INTO reservas (id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, tarifa_historica, total, estado)
+SELECT s.id, c.id, '2026-10-16 19:00:00', '2026-10-16 20:00:00', c.precio_hora, c.precio_hora, 'finalizada'
+FROM socios s
+JOIN canchas c ON c.nombre = 'Cancha Tenis 1'
+WHERE s.email = 'maria.gomez@example.com'
+AND NOT EXISTS (
+    SELECT 1 FROM reservas r 
+    WHERE r.id_socio = s.id AND r.id_cancha = c.id AND r.fecha_hora_inicio = '2026-10-16 19:00:00'
+);
