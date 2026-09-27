@@ -205,6 +205,13 @@ def crear_reserva(data):
             "La reserva debe comenzar y terminar el mismo día",
             400,
         )
+
+    if fecha_hora_fin <= fecha_hora_inicio:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "La fecha de fin debe ser posterior a la fecha de inicio",
+            400,
+        )
         
     diferencia = fecha_hora_fin - fecha_hora_inicio 
     duracion_horas = diferencia.total_seconds() / 3600.0 
