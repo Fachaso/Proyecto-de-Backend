@@ -83,10 +83,14 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
 
     if fecha_desde:
         dt_desde = parse_iso_datetime(fecha_desde)
+        
         if not dt_desde:
             return respuesta_error(
-                "ERROR_VALIDACION", "Formato inválido para fecha_desde", 400
+                "ERROR_VALIDACION",
+                "Formato inválido para fecha_desde",
+                400, 
             )
+            
         where_clauses.append("fecha_hora_inicio >= %s")
         params.append(dt_desde)
         
@@ -94,8 +98,11 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
         dt_hasta = parse_iso_datetime(fecha_hasta)
         if not dt_hasta:
             return respuesta_error(
-                "ERROR_VALIDACION", "Formato inválido para fecha_hasta", 400
+                "ERROR_VALIDACION", 
+                "Formato inválido para fecha_hasta", 
+                400,
             )
+            
         where_clauses.append("fecha_hora_fin <= %s")
         params.append(dt_hasta)
 
