@@ -616,9 +616,7 @@ def actualizar_cancha(
         params,
     )
 
-    return obtener_por_id(
-        cancha_id
-    ), 200
+    return None, 204
 
 
 def eliminar_cancha(cancha_id):

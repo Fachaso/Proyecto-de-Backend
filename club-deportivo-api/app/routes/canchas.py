@@ -301,8 +301,19 @@ def update_cancha(cancha_id):
         silent=True
     )
 
-    if data is None:
-        data = {}
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }), 400
 
     resultado, status_code = (
         canchas_service.actualizar_cancha(
@@ -311,10 +322,12 @@ def update_cancha(cancha_id):
         )
     )
 
+    if status_code == 204:
+        return "", 204
+
     return jsonify(
         resultado
     ), status_code
-
 
 @canchas_bp.route(
     "/<int:cancha_id>",
