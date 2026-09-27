@@ -1,23 +1,51 @@
 import app.db as db
 
 
-def obtener_con_filtros(where_sql, params, limit, offset):
+def obtener_con_filtros(
+    where_sql,
+    params,
+    limit,
+    offset,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
-    try:
-        count_query = f"SELECT COUNT(*) AS total FROM canchas {where_sql}"
-        cursor.execute(count_query, params)
-        total = cursor.fetchone()["total"]
 
-        data_query = (
-            f"SELECT id, id_deporte, nombre, precio_hora, techada, activa "
-            f"FROM canchas {where_sql} "
-            f"ORDER BY id ASC "
-            f"LIMIT %s OFFSET %s"
+    try:
+        count_query = (
+            "SELECT COUNT(*) AS total "
+            f"FROM canchas{where_sql}"
         )
 
-        cursor.execute(data_query, params + [limit, offset])
-        canchas = cursor.fetchall()
+        cursor.execute(
+            count_query,
+            params,
+        )
+
+        total = (
+            cursor.fetchone()["total"]
+        )
+
+        data_query = (
+            "SELECT id, id_deporte, "
+            "nombre, precio_hora, "
+            "techada, activa "
+            f"FROM canchas{where_sql} "
+            "ORDER BY id ASC "
+            "LIMIT %s OFFSET %s"
+        )
+
+        cursor.execute(
+            data_query,
+            params + [
+                limit,
+                offset,
+            ],
+        )
+
+        canchas = (
+            cursor.fetchall()
+        )
+
         return canchas, total
 
     finally:
@@ -28,15 +56,25 @@ def obtener_con_filtros(where_sql, params, limit, offset):
 def obtener_por_id(cancha_id):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         cursor.execute(
             """
-            SELECT id, id_deporte, nombre, precio_hora, techada, activa
+            SELECT
+                id,
+                id_deporte,
+                nombre,
+                precio_hora,
+                techada,
+                activa
             FROM canchas
             WHERE id = %s
             """,
-            (cancha_id,),
+            (
+                cancha_id,
+            ),
         )
+
         return cursor.fetchone()
 
     finally:
@@ -44,9 +82,12 @@ def obtener_por_id(cancha_id):
         conn.close()
 
 
-def verificar_deporte(id_deporte):
+def verificar_deporte(
+    id_deporte,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         cursor.execute(
             """
@@ -54,8 +95,11 @@ def verificar_deporte(id_deporte):
             FROM deportes
             WHERE id = %s
             """,
-            (id_deporte,),
+            (
+                id_deporte,
+            ),
         )
+
         return cursor.fetchone()
 
     finally:
@@ -63,9 +107,12 @@ def verificar_deporte(id_deporte):
         conn.close()
 
 
-def verificar_reservas_asociadas(cancha_id):
+def verificar_reservas_asociadas(
+    cancha_id,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         cursor.execute(
             """
@@ -74,18 +121,31 @@ def verificar_reservas_asociadas(cancha_id):
             WHERE id_cancha = %s
             LIMIT 1
             """,
-            (cancha_id,),
+            (
+                cancha_id,
+            ),
         )
-        return cursor.fetchone() is not None
+
+        return (
+            cursor.fetchone()
+            is not None
+        )
 
     finally:
         cursor.close()
         conn.close()
 
 
-def crear(id_deporte, nombre, precio_hora, techada, activa):
+def crear(
+    id_deporte,
+    nombre,
+    precio_hora,
+    techada,
+    activa,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         query = """
             INSERT INTO canchas (
@@ -97,6 +157,7 @@ def crear(id_deporte, nombre, precio_hora, techada, activa):
             )
             VALUES (%s, %s, %s, %s, %s)
         """
+
         cursor.execute(
             query,
             (
@@ -107,7 +168,9 @@ def crear(id_deporte, nombre, precio_hora, techada, activa):
                 1 if activa else 0,
             ),
         )
+
         conn.commit()
+
         return cursor.lastrowid
 
     finally:
@@ -115,19 +178,28 @@ def crear(id_deporte, nombre, precio_hora, techada, activa):
         conn.close()
 
 
-def actualizar(cancha_id, fields, params):
+def actualizar(
+    cancha_id,
+    fields,
+    params,
+):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         query = (
-            f"UPDATE canchas "
+            "UPDATE canchas "
             f"SET {', '.join(fields)} "
-            f"WHERE id = %s"
+            "WHERE id = %s"
         )
+
         cursor.execute(
             query,
-            params + [cancha_id],
+            params + [
+                cancha_id
+            ],
         )
+
         conn.commit()
 
     finally:
@@ -138,14 +210,18 @@ def actualizar(cancha_id, fields, params):
 def eliminar(cancha_id):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         cursor.execute(
             """
             DELETE FROM canchas
             WHERE id = %s
             """,
-            (cancha_id,),
+            (
+                cancha_id,
+            ),
         )
+
         conn.commit()
 
     finally:
@@ -163,6 +239,7 @@ def obtener_canchas_disponibles(
 ):
     conn = db.get_db_connection()
     cursor = conn.cursor()
+
     try:
         where_clauses = [
             "c.activa = 1",
@@ -184,28 +261,68 @@ def obtener_canchas_disponibles(
         ]
 
         if id_deporte is not None:
-            where_clauses.append("c.id_deporte = %s")
-            params.append(id_deporte)
+            where_clauses.append(
+                "c.id_deporte = %s"
+            )
+            params.append(
+                id_deporte
+            )
 
         if techada is not None:
-            where_clauses.append("c.techada = %s")
-            params.append(1 if techada else 0)
+            where_clauses.append(
+                "c.techada = %s"
+            )
+            params.append(
+                1 if techada else 0
+            )
 
-        where_sql = " WHERE " + " AND ".join(where_clauses)
-
-        count_query = f"SELECT COUNT(*) AS total FROM canchas c {where_sql}"
-        cursor.execute(count_query, params)
-        total = cursor.fetchone()["total"]
-
-        data_query = (
-            f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activa "  # Corregido 'activada' a 'activa'
-            f"FROM canchas c {where_sql} " 
-            f"ORDER BY c.id ASC "
-            f"LIMIT %s OFFSET %s"
+        where_sql = (
+            " WHERE "
+            + " AND ".join(
+                where_clauses
+            )
         )
 
-        cursor.execute(data_query, params + [limit, offset])
-        canchas = cursor.fetchall()
+        count_query = (
+            "SELECT COUNT(*) AS total "
+            "FROM canchas c "
+            f"{where_sql}"
+        )
+
+        cursor.execute(
+            count_query,
+            params,
+        )
+
+        total = (
+            cursor.fetchone()["total"]
+        )
+
+        data_query = (
+            "SELECT "
+            "c.id, "
+            "c.id_deporte, "
+            "c.nombre, "
+            "c.precio_hora, "
+            "c.techada, "
+            "c.activa "
+            "FROM canchas c "
+            f"{where_sql} "
+            "ORDER BY c.id ASC "
+            "LIMIT %s OFFSET %s"
+        )
+
+        cursor.execute(
+            data_query,
+            params + [
+                limit,
+                offset,
+            ],
+        )
+
+        canchas = (
+            cursor.fetchall()
+        )
 
         return canchas, total
 

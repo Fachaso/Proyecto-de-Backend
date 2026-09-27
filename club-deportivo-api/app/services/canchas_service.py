@@ -3,20 +3,32 @@ from datetime import datetime, timedelta, timezone
 import app.repositories.canchas_repository as canchas_repository
 
 
-def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
+def listar_canchas(
+    limit,
+    offset,
+    id_deporte,
+    nombre,
+    techada,
+    activa,
+):
     where_clauses = []
     params = []
     extra_params = {}
 
     if id_deporte is not None:
         try:
-            id_deporte = int(id_deporte)
+            id_deporte = int(
+                id_deporte
+            )
         except (ValueError, TypeError):
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "id_deporte debe ser un entero positivo",
+                        "message": (
+                            "id_deporte debe ser "
+                            "un entero positivo"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -27,7 +39,10 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "id_deporte debe ser un entero positivo",
+                        "message": (
+                            "id_deporte debe ser "
+                            "un entero positivo"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -36,8 +51,12 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         where_clauses.append(
             "id_deporte = %s"
         )
-        params.append(id_deporte)
-        extra_params["id_deporte"] = id_deporte
+        params.append(
+            id_deporte
+        )
+        extra_params[
+            "id_deporte"
+        ] = id_deporte
 
     if nombre:
         where_clauses.append(
@@ -46,7 +65,9 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         params.append(
             f"%{nombre.lower()}%"
         )
-        extra_params["nombre"] = nombre
+        extra_params[
+            "nombre"
+        ] = nombre
 
     if techada is not None:
         if techada not in [
@@ -57,7 +78,10 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "techada debe ser true o false",
+                        "message": (
+                            "techada debe ser "
+                            "true o false"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -66,10 +90,15 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         where_clauses.append(
             "techada = %s"
         )
+
         params.append(
-            1 if techada == "true" else 0
+            1 if techada == "true"
+            else 0
         )
-        extra_params["techada"] = techada
+
+        extra_params[
+            "techada"
+        ] = techada
 
     if activa is not None:
         if activa not in [
@@ -80,7 +109,10 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "activa debe ser true o false",
+                        "message": (
+                            "activa debe ser "
+                            "true o false"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -89,15 +121,22 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         where_clauses.append(
             "activa = %s"
         )
+
         params.append(
-            1 if activa == "true" else 0
+            1 if activa == "true"
+            else 0
         )
-        extra_params["activa"] = activa
+
+        extra_params[
+            "activa"
+        ] = activa
 
     if where_clauses:
         where_sql = (
             " WHERE "
-            + " AND ".join(where_clauses)
+            + " AND ".join(
+                where_clauses
+            )
         )
     else:
         where_sql = ""
@@ -119,6 +158,7 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         cancha["techada"] = bool(
             cancha["techada"]
         )
+
         cancha["activa"] = bool(
             cancha["activa"]
         )
@@ -129,9 +169,12 @@ def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
         "extra_params": extra_params,
     }, 200
 
+
 def obtener_por_id(cancha_id):
-    cancha = canchas_repository.obtener_por_id(
-        cancha_id
+    cancha = (
+        canchas_repository.obtener_por_id(
+            cancha_id
+        )
     )
 
     if not cancha:
@@ -154,7 +197,10 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "El cuerpo debe ser un objeto JSON",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
                     "level": "error",
                 }
             ]
@@ -178,15 +224,18 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Se enviaron campos desconocidos",
+                    "message": (
+                        "Se enviaron campos "
+                        "desconocidos"
+                    ),
                     "level": "error",
                 }
             ]
         }, 400
 
-    nombre = str(
-        data.get("nombre", "")
-    ).strip()
+    nombre = data.get(
+        "nombre"
+    )
 
     id_deporte = data.get(
         "id_deporte"
@@ -207,7 +256,7 @@ def crear_cancha(data):
     )
 
     if (
-        not nombre
+        nombre is None
         or id_deporte is None
         or precio_hora is None
     ):
@@ -215,7 +264,43 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Campos obligatorios faltantes",
+                    "message": (
+                        "Campos obligatorios "
+                        "faltantes"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }, 400
+
+    if not isinstance(
+        nombre,
+        str,
+    ):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "nombre debe ser "
+                        "un string"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }, 400
+
+    nombre = nombre.strip()
+
+    if not nombre:
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "El nombre no puede "
+                        "estar vacío"
+                    ),
                     "level": "error",
                 }
             ]
@@ -229,7 +314,10 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "id_deporte debe ser un entero positivo",
+                    "message": (
+                        "id_deporte debe ser "
+                        "un entero positivo"
+                    ),
                     "level": "error",
                 }
             ]
@@ -243,7 +331,10 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "precio_hora debe ser un entero positivo",
+                    "message": (
+                        "precio_hora debe ser "
+                        "un entero positivo"
+                    ),
                     "level": "error",
                 }
             ]
@@ -254,7 +345,10 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "techada debe ser un booleano",
+                    "message": (
+                        "techada debe ser "
+                        "un booleano"
+                    ),
                     "level": "error",
                 }
             ]
@@ -265,31 +359,41 @@ def crear_cancha(data):
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "activa debe ser un booleano",
+                    "message": (
+                        "activa debe ser "
+                        "un booleano"
+                    ),
                     "level": "error",
                 }
             ]
         }, 400
 
-    if not canchas_repository.verificar_deporte(
-        id_deporte
+    if not (
+        canchas_repository
+        .verificar_deporte(
+            id_deporte
+        )
     ):
         return {
             "errors": [
                 {
                     "code": "NOT_FOUND",
-                    "message": "Deporte no encontrado",
+                    "message": (
+                        "Deporte no encontrado"
+                    ),
                     "level": "error",
                 }
             ]
         }, 404
 
-    cancha_id = canchas_repository.crear(
-        id_deporte,
-        nombre,
-        precio_hora,
-        techada,
-        activa,
+    cancha_id = (
+        canchas_repository.crear(
+            id_deporte,
+            nombre,
+            precio_hora,
+            techada,
+            activa,
+        )
     )
 
     return {
@@ -317,7 +421,9 @@ def actualizar_cancha(
             "errors": [
                 {
                     "code": "NOT_FOUND",
-                    "message": "Cancha no encontrada",
+                    "message": (
+                        "Cancha no encontrada"
+                    ),
                     "level": "error",
                 }
             ]
@@ -328,7 +434,10 @@ def actualizar_cancha(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "El cuerpo debe ser un objeto JSON",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
                     "level": "error",
                 }
             ]
@@ -339,7 +448,10 @@ def actualizar_cancha(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "El cuerpo no puede estar vacío",
+                    "message": (
+                        "El cuerpo no puede "
+                        "estar vacío"
+                    ),
                     "level": "error",
                 }
             ]
@@ -362,7 +474,11 @@ def actualizar_cancha(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Se enviaron campos no editables o desconocidos",
+                    "message": (
+                        "Se enviaron campos "
+                        "no editables o "
+                        "desconocidos"
+                    ),
                     "level": "error",
                 }
             ]
@@ -380,27 +496,40 @@ def actualizar_cancha(
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "nombre debe ser un string",
+                        "message": (
+                            "nombre debe ser "
+                            "un string"
+                        ),
                         "level": "error",
                     }
                 ]
             }, 400
 
-        nombre = data["nombre"].strip()
+        nombre = (
+            data["nombre"]
+            .strip()
+        )
 
         if not nombre:
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "El nombre no puede estar vacío",
+                        "message": (
+                            "El nombre no puede "
+                            "estar vacío"
+                        ),
                         "level": "error",
                     }
                 ]
             }, 400
 
-        fields.append("nombre = %s")
-        params.append(nombre)
+        fields.append(
+            "nombre = %s"
+        )
+        params.append(
+            nombre
+        )
 
     if "precio_hora" in data:
         precio_hora = data[
@@ -415,7 +544,10 @@ def actualizar_cancha(
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "precio_hora debe ser un entero positivo",
+                        "message": (
+                            "precio_hora debe "
+                            "ser un entero positivo"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -424,38 +556,56 @@ def actualizar_cancha(
         fields.append(
             "precio_hora = %s"
         )
-        params.append(precio_hora)
+        params.append(
+            precio_hora
+        )
 
     if "techada" in data:
-        if type(data["techada"]) is not bool:
+        if (
+            type(data["techada"])
+            is not bool
+        ):
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "techada debe ser un booleano",
+                        "message": (
+                            "techada debe ser "
+                            "un booleano"
+                        ),
                         "level": "error",
                     }
                 ]
             }, 400
 
-        fields.append("techada = %s")
+        fields.append(
+            "techada = %s"
+        )
         params.append(
             data["techada"]
         )
 
     if "activa" in data:
-        if type(data["activa"]) is not bool:
+        if (
+            type(data["activa"])
+            is not bool
+        ):
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "activa debe ser un booleano",
+                        "message": (
+                            "activa debe ser "
+                            "un booleano"
+                        ),
                         "level": "error",
                     }
                 ]
             }, 400
 
-        fields.append("activa = %s")
+        fields.append(
+            "activa = %s"
+        )
         params.append(
             data["activa"]
         )
@@ -483,7 +633,9 @@ def eliminar_cancha(cancha_id):
             "errors": [
                 {
                     "code": "NOT_FOUND",
-                    "message": "Cancha no encontrada",
+                    "message": (
+                        "Cancha no encontrada"
+                    ),
                     "level": "error",
                 }
             ]
@@ -499,7 +651,11 @@ def eliminar_cancha(cancha_id):
             "errors": [
                 {
                     "code": "CONFLICT",
-                    "message": "No se puede eliminar una cancha con reservas asociadas",
+                    "message": (
+                        "No se puede eliminar "
+                        "una cancha con reservas "
+                        "asociadas"
+                    ),
                     "level": "error",
                 }
             ]
@@ -546,7 +702,10 @@ def obtener_canchas_disponibles(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Fecha u hora con formato inválido",
+                    "message": (
+                        "Fecha u hora con "
+                        "formato inválido"
+                    ),
                     "level": "error",
                 }
             ]
@@ -562,7 +721,11 @@ def obtener_canchas_disponibles(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Las reservas deben comenzar y terminar en horas en punto",
+                    "message": (
+                        "Las reservas deben "
+                        "comenzar y terminar "
+                        "en horas en punto"
+                    ),
                     "level": "error",
                 }
             ]
@@ -590,7 +753,11 @@ def obtener_canchas_disponibles(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "La hora de inicio debe ser menor que la hora de fin",
+                    "message": (
+                        "La hora de inicio "
+                        "debe ser menor que "
+                        "la hora de fin"
+                    ),
                     "level": "error",
                 }
             ]
@@ -624,7 +791,11 @@ def obtener_canchas_disponibles(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "El intervalo debe estar entre las 08:00 y las 23:00",
+                    "message": (
+                        "El intervalo debe estar "
+                        "entre las 08:00 "
+                        "y las 23:00"
+                    ),
                     "level": "error",
                 }
             ]
@@ -636,14 +807,19 @@ def obtener_canchas_disponibles(
     )
 
     if (
-        duracion < timedelta(hours=1)
-        or duracion > timedelta(hours=3)
+        duracion
+        < timedelta(hours=1)
+        or duracion
+        > timedelta(hours=3)
     ):
         return {
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "La duración debe ser de entre 1 y 3 horas",
+                    "message": (
+                        "La duración debe ser "
+                        "de entre 1 y 3 horas"
+                    ),
                     "level": "error",
                 }
             ]
@@ -664,7 +840,11 @@ def obtener_canchas_disponibles(
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "El inicio debe ser posterior al momento actual",
+                    "message": (
+                        "El inicio debe ser "
+                        "posterior al "
+                        "momento actual"
+                    ),
                     "level": "error",
                 }
             ]
@@ -677,23 +857,35 @@ def obtener_canchas_disponibles(
             id_deporte_convertido = int(
                 id_deporte
             )
-        except (ValueError, TypeError):
+        except (
+            ValueError,
+            TypeError,
+        ):
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "id_deporte debe ser un entero",
+                        "message": (
+                            "id_deporte debe "
+                            "ser un entero"
+                        ),
                         "level": "error",
                     }
                 ]
             }, 400
 
-        if id_deporte_convertido <= 0:
+        if (
+            id_deporte_convertido
+            <= 0
+        ):
             return {
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "id_deporte debe ser positivo",
+                        "message": (
+                            "id_deporte debe "
+                            "ser positivo"
+                        ),
                         "level": "error",
                     }
                 ]
@@ -710,7 +902,10 @@ def obtener_canchas_disponibles(
                 "errors": [
                     {
                         "code": "BAD_REQUEST",
-                        "message": "techada debe ser true o false",
+                        "message": (
+                            "techada debe ser "
+                            "true o false"
+                        ),
                         "level": "error",
                     }
                 ]

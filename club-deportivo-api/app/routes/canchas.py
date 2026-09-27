@@ -11,7 +11,7 @@ canchas_bp = Blueprint(
 )
 
 
-@canchas_bp.route("",methods=["GET"],)
+@canchas_bp.route("", methods=["GET"])
 def get_canchas():
     parametros_permitidos = {
         "id_deporte",
@@ -33,6 +33,7 @@ def get_canchas():
                     }
                 ]
             }), 400
+
     limit, offset, error = (
         pagination.get_pagination_params()
     )
@@ -65,29 +66,43 @@ def get_canchas():
     )
 
     resultado, status_code = (
-        canchas_service.listar_canchas(limit,offset,id_deporte,nombre,techada,activa,)
+        canchas_service.listar_canchas(
+            limit,
+            offset,
+            id_deporte,
+            nombre,
+            techada,
+            activa,
+        )
     )
 
     if status_code == 204:
         return "", 204
 
     if status_code != 200:
-        return jsonify(resultado), status_code
+        return jsonify(
+            resultado
+        ), status_code
 
-    response = pagination.build_pagination_response(
-        "canchas",
-        resultado["canchas"],
-        resultado["total"],
-        limit,
-        offset,
-        "/canchas",
-        resultado["extra_params"],
+    response = (
+        pagination.build_pagination_response(
+            "canchas",
+            resultado["canchas"],
+            resultado["total"],
+            limit,
+            offset,
+            "/canchas",
+            resultado["extra_params"],
+        )
     )
 
     return jsonify(response), 200
 
 
-@canchas_bp.route("/disponibles", methods=["GET"],)
+@canchas_bp.route(
+    "/disponibles",
+    methods=["GET"],
+)
 def get_canchas_disponibles():
     limit, offset, error = (
         pagination.get_pagination_params()
@@ -129,18 +144,23 @@ def get_canchas_disponibles():
         or not hora_inicio
         or not hora_fin
     ):
-        return jsonify(
-            {
-                "errors": [
-                    {
-                        "code": "ERROR_VALIDACION",
-                        "message": "Parámetros fecha, hora_inicio y hora_fin son requeridos",
-                        "level": "error",
-                        "description": "Debe proporcionar fecha, hora_inicio y hora_fin para consultar disponibilidad",
-                    }
-                ]
-            }
-        ), 400
+        return jsonify({
+            "errors": [
+                {
+                    "code": "ERROR_VALIDACION",
+                    "message": (
+                        "Parámetros fecha, hora_inicio "
+                        "y hora_fin son requeridos"
+                    ),
+                    "level": "error",
+                    "description": (
+                        "Debe proporcionar fecha, "
+                        "hora_inicio y hora_fin para "
+                        "consultar disponibilidad"
+                    ),
+                }
+            ]
+        }), 400
 
     resultado, status_code = (
         canchas_service
@@ -161,8 +181,7 @@ def get_canchas_disponibles():
         ), status_code
 
     response = (
-        pagination
-        .build_pagination_response(
+        pagination.build_pagination_response(
             "canchas",
             resultado["canchas"],
             resultado["total"],
@@ -188,18 +207,19 @@ def get_cancha_by_id(cancha_id):
     )
 
     if not cancha:
-        return jsonify(
-            {
-                "errors": [
-                    {
-                        "code": "RECURSO_NO_ENCONTRADO",
-                        "message": "Cancha no encontrada",
-                        "level": "error",
-                        "description": f"No existe una cancha con el id {cancha_id}",
-                    }
-                ]
-            }
-        ), 404
+        return jsonify({
+            "errors": [
+                {
+                    "code": "RECURSO_NO_ENCONTRADO",
+                    "message": "Cancha no encontrada",
+                    "level": "error",
+                    "description": (
+                        f"No existe una cancha con "
+                        f"el id {cancha_id}"
+                    ),
+                }
+            ]
+        }), 404
 
     return jsonify(cancha), 200
 
@@ -213,8 +233,19 @@ def create_cancha():
         silent=True
     )
 
-    if data is None:
-        data = {}
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }), 400
 
     resultado, status_code = (
         canchas_service.crear_cancha(
@@ -226,17 +257,11 @@ def create_cancha():
         headers = {}
 
         if (
-            isinstance(
-                resultado,
-                dict,
-            )
+            isinstance(resultado, dict)
             and "id" in resultado
         ):
-            headers[
-                "Location"
-            ] = (
-                f"/canchas/"
-                f"{resultado['id']}"
+            headers["Location"] = (
+                f"/canchas/{resultado['id']}"
             )
 
         return "", 201, headers
@@ -259,8 +284,7 @@ def update_cancha(cancha_id):
         data = {}
 
     resultado, status_code = (
-        canchas_service
-        .actualizar_cancha(
+        canchas_service.actualizar_cancha(
             cancha_id,
             data,
         )
@@ -277,8 +301,7 @@ def update_cancha(cancha_id):
 )
 def delete_cancha(cancha_id):
     resultado, status_code = (
-        canchas_service
-        .eliminar_cancha(
+        canchas_service.eliminar_cancha(
             cancha_id
         )
     )
