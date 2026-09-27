@@ -104,6 +104,30 @@ def get_canchas():
     methods=["GET"],
 )
 def get_canchas_disponibles():
+    parametros_permitidos = {
+        "fecha",
+        "hora_inicio",
+        "hora_fin",
+        "id_deporte",
+        "techada",
+        "_limit",
+        "_offset",
+    }
+
+    for parametro in request.args:
+        if parametro not in parametros_permitidos:
+            return jsonify({
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": (
+                            f"Parámetro desconocido: "
+                            f"{parametro}"
+                        ),
+                        "level": "error",
+                    }
+                ]
+            }), 400
     limit, offset, error = (
         pagination.get_pagination_params()
     )

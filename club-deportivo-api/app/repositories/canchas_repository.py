@@ -229,14 +229,8 @@ def eliminar(cancha_id):
         conn.close()
 
 
-def obtener_canchas_disponibles(
-    inicio_solicitado,
-    fin_solicitado,
-    id_deporte=None,
-    techada=None,
-    limit=10,
-    offset=0,
-):
+def obtener_canchas_disponibles(inicio_solicitado,fin_solicitado,id_deporte=None,techada=None,
+limit=10,offset=0,):
     conn = db.get_db_connection()
     cursor = conn.cursor()
 
@@ -325,7 +319,6 @@ def obtener_canchas_disponibles(
         )
 
         return canchas, total
-
     finally:
         cursor.close()
         conn.close()

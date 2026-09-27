@@ -666,15 +666,8 @@ def eliminar_cancha(cancha_id):
     return None, 204
 
 
-def obtener_canchas_disponibles(
-    fecha,
-    hora_inicio,
-    hora_fin,
-    id_deporte=None,
-    techada=None,
-    limit=10,
-    offset=0,
-):
+def obtener_canchas_disponibles(fecha,hora_inicio,hora_fin,id_deporte=None,techada=None,
+    limit=10,offset=0,):
     try:
         fecha_obj = datetime.strptime(
             fecha,
@@ -708,6 +701,39 @@ def obtener_canchas_disponibles(
                 }
             ]
         }, 400
+    
+    if fecha_obj.strftime("%Y-%m-%d") != fecha:
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "La fecha debe tener formato YYYY-MM-DD",
+                    "level": "error",
+                }
+            ]
+        }, 400
+
+        if hora_inicio_obj.strftime("%H:%M:%S") != hora_inicio:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "hora_inicio debe tener formato HH:00:00",
+                        "level": "error",
+                    }
+                ]
+            }, 400
+
+        if hora_fin_obj.strftime("%H:%M:%S") != hora_fin:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "hora_fin debe tener formato HH:00:00",
+                        "level": "error",
+                    }
+                ]
+            }, 400
 
     if (
         hora_inicio_obj.minute != 0
