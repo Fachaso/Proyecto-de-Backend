@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from dotenv import load_dotenv
 
 def create_app():
@@ -14,5 +14,15 @@ def create_app():
     app.register_blueprint(canchas_bp)
     app.register_blueprint(reservas_bp)
     app.register_blueprint(socios_bp)
-
+    @app.errorhandler(500)
+    def manejar_error_interno(error):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "INTERNAL_SERVER_ERROR",
+                    "message": "Error interno del servidor",
+                    "level": "error",
+                }
+            ]
+        }), 500
     return app
