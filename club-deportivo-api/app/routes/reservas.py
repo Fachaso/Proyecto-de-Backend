@@ -1,14 +1,42 @@
 from flask import Blueprint, jsonify, request
 
 import app.services.reservas_service as reservas_service
-from app.utils.pagination import get_pagination_params
+import app.utils.pagination as pagination
 
 reservas_bp = Blueprint("reservas", __name__, url_prefix="/reservas")
 
 
 @reservas_bp.route("", methods=["GET"])
 def get_reservas():
-    limit, offset, error = get_pagination_params()
+    parametros_permitidos = {
+        "id_cancha",
+        "id_socio",
+        "estado",
+        "fecha_desde",
+        "fecha_hasta",
+        "_limit",
+        "_offset",
+    }
+
+    for parametro in request.args:
+        if parametro not in parametros_permitidos:
+            return jsonify({
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": (
+                            f"Parámetro desconocido: "
+                            f"{parametro}"
+                        ),
+                        "level": "error",
+                    }
+                ]
+            }), 400
+
+    limit, offset, error = (
+        pagination.get_pagination_params()
+    )
+
     if error:
         return jsonify({
             "errors": [
@@ -19,26 +47,60 @@ def get_reservas():
                 }
             ]
         }), 400
-    id_cancha = request.args.get("id_cancha")
-    id_socio = request.args.get("id_socio")
-    estado = request.args.get("estado")
-    fecha_desde = request.args.get("fecha_desde")
-    fecha_hasta = request.args.get("fecha_hasta")
 
-    resultado, status_code = reservas_service.listar_reservas(
-        limit=limit,
-        offset=offset,
-        id_cancha=id_cancha,
-        id_socio=id_socio,
-        estado=estado,
-        fecha_desde=fecha_desde,
-        fecha_hasta=fecha_hasta,
+    id_cancha = request.args.get(
+        "id_cancha"
+    )
+
+    id_socio = request.args.get(
+        "id_socio"
+    )
+
+    estado = request.args.get(
+        "estado"
+    )
+
+    fecha_desde = request.args.get(
+        "fecha_desde"
+    )
+
+    fecha_hasta = request.args.get(
+        "fecha_hasta"
+    )
+
+    resultado, status_code = (
+        reservas_service.listar_reservas(
+            limit,
+            offset,
+            id_cancha,
+            id_socio,
+            estado,
+            fecha_desde,
+            fecha_hasta,
+        )
     )
 
     if status_code == 204:
         return "", 204
 
-    return jsonify(resultado), status_code
+    if status_code != 200:
+        return jsonify(
+            resultado
+        ), status_code
+
+    response = (
+        pagination.build_pagination_response(
+            "reservas",
+            resultado["reservas"],
+            resultado["total"],
+            limit,
+            offset,
+            "/reservas",
+            resultado["extra_params"],
+        )
+    )
+
+    return jsonify(response), 200
 
 
 @reservas_bp.route("/<int:reserva_id>", methods=["GET"])

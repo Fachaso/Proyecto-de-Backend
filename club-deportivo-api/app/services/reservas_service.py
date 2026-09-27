@@ -44,99 +44,260 @@ def format_iso_datetime(dt):
         
     return dt.isoformat()
 
-def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fecha_hasta):
+def listar_reservas(limit,offset,id_cancha,id_socio,estado,fecha_desde,fecha_hasta,):
     where_clauses = []
     params = []
-
-    if limit <= 0:
-        return respuesta_error(
-            "ERROR_VALIDACION", 
-            "limit debe ser mayor a 0",
-            400, 
-        )
-
-    if offset < 0:
-        return respuesta_error(
-            "ERROR_VALIDACION",
-            "offset no puede ser negativo",
-            400,
-        )
-
-    if id_cancha is not None and (not isinstance(id_cancha, int) or id_cancha <= 0):
-        return respuesta_error(
-            "ERROR_VALIDACION",
-            "id_cancha debe ser un entero positivo",
-            400,
-        )
-
-    if id_socio is not None and (not isinstance(id_socio, int) or id_socio <= 0):
-        return respuesta_error(
-            "ERROR_VALIDACION",
-            "id_socio debe ser un entero positivo",
-            400,
-        )
+    extra_params = {}
 
     if id_cancha is not None:
-        where_clauses.append("id_cancha = %s")
-        params.append(id_cancha)
-
-    if id_socio is not None:
-        where_clauses.append("id_socio = %s")
-        params.append(id_socio)
-        
-    if estado:
-        if estado not in {"confirmada", "cancelada", "finalizada"}:
-            return respuesta_error(
-                "ERROR_VALIDACION", 
-                "El estado debe ser 'confirmada', 'cancelada' o 'finalizada',"
-                '400,'
+        try:
+            id_cancha = int(
+                id_cancha
             )
-            
-        where_clauses.append("estado = %s")
-        params.append(estado)
-
-    if fecha_desde:
-        dt_desde = parse_iso_datetime(fecha_desde)
-        
-        if not dt_desde:
+        except (ValueError, TypeError):
             return respuesta_error(
                 "ERROR_VALIDACION",
-                "Formato inválido para fecha_desde",
-                400, 
-            )
-            
-        where_clauses.append("fecha_hora_inicio >= %s")
-        params.append(dt_desde)
-        
-    if fecha_hasta:
-        dt_hasta = parse_iso_datetime(fecha_hasta)
-        if not dt_hasta:
-            return respuesta_error(
-                "ERROR_VALIDACION", 
-                "Formato inválido para fecha_hasta", 
+                "id_cancha debe ser un entero positivo",
                 400,
             )
-            
-        where_clauses.append("fecha_hora_fin <= %s")
-        params.append(dt_hasta)
 
-    where_sql = (
-       " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        if id_cancha <= 0:
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                "id_cancha debe ser un entero positivo",
+                400,
+            )
+
+        where_clauses.append(
+            "id_cancha = %s"
+        )
+
+        params.append(
+            id_cancha
+        )
+
+        extra_params[
+            "id_cancha"
+        ] = id_cancha
+
+    if id_socio is not None:
+        try:
+            id_socio = int(
+                id_socio
+            )
+        except (ValueError, TypeError):
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                "id_socio debe ser un entero positivo",
+                400,
+            )
+
+        if id_socio <= 0:
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                "id_socio debe ser un entero positivo",
+                400,
+            )
+
+        where_clauses.append(
+            "id_socio = %s"
+        )
+
+        params.append(
+            id_socio
+        )
+
+        extra_params[
+            "id_socio"
+        ] = id_socio
+
+    if estado is not None:
+        if estado not in {
+            "confirmada",
+            "cancelada",
+            "finalizada",
+        }:
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                (
+                    "El estado debe ser "
+                    "'confirmada', 'cancelada' "
+                    "o 'finalizada'"
+                ),
+                400,
+            )
+
+        where_clauses.append(
+            "estado = %s"
+        )
+
+        params.append(
+            estado
+        )
+
+        extra_params[
+            "estado"
+        ] = estado
+
+    fecha_desde_obj = None
+    fecha_hasta_obj = None
+
+    if fecha_desde is not None:
+        try:
+            fecha_desde_obj = (
+                datetime.strptime(
+                    fecha_desde,
+                    "%Y-%m-%d",
+                ).date()
+            )
+        except (ValueError, TypeError):
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                (
+                    "fecha_desde debe tener "
+                    "formato YYYY-MM-DD"
+                ),
+                400,
+            )
+
+        if (
+            fecha_desde_obj.strftime(
+                "%Y-%m-%d"
+            )
+            != fecha_desde
+        ):
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                (
+                    "fecha_desde debe tener "
+                    "formato YYYY-MM-DD"
+                ),
+                400,
+            )
+
+    if fecha_hasta is not None:
+        try:
+            fecha_hasta_obj = (
+                datetime.strptime(
+                    fecha_hasta,
+                    "%Y-%m-%d",
+                ).date()
+            )
+        except (ValueError, TypeError):
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                (
+                    "fecha_hasta debe tener "
+                    "formato YYYY-MM-DD"
+                ),
+                400,
+            )
+
+        if (
+            fecha_hasta_obj.strftime(
+                "%Y-%m-%d"
+            )
+            != fecha_hasta
+        ):
+            return respuesta_error(
+                "ERROR_VALIDACION",
+                (
+                    "fecha_hasta debe tener "
+                    "formato YYYY-MM-DD"
+                ),
+                400,
+            )
+
+    if (
+        fecha_desde_obj is not None
+        and fecha_hasta_obj is not None
+        and fecha_desde_obj > fecha_hasta_obj
+    ):
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            (
+                "fecha_desde debe ser menor "
+                "o igual a fecha_hasta"
+            ),
+            400,
+        )
+
+    if fecha_desde_obj is not None:
+        where_clauses.append(
+            "DATE(fecha_hora_inicio) >= %s"
+        )
+
+        params.append(
+            fecha_desde_obj
+        )
+
+        extra_params[
+            "fecha_desde"
+        ] = fecha_desde
+
+    if fecha_hasta_obj is not None:
+        where_clauses.append(
+            "DATE(fecha_hora_inicio) <= %s"
+        )
+
+        params.append(
+            fecha_hasta_obj
+        )
+
+        extra_params[
+            "fecha_hasta"
+        ] = fecha_hasta
+
+    if where_clauses:
+        where_sql = (
+            " WHERE "
+            + " AND ".join(
+                where_clauses
+            )
+        )
+    else:
+        where_sql = ""
+
+    reservas, total = (
+        obtener_con_filtros(
+            where_sql,
+            params,
+            limit,
+            offset,
+        )
     )
-        
-    reservas, _total = obtener_con_filtros(where_sql, params, limit, offset)
 
     if not reservas:
         return None, 204
 
-    for r in reservas:
-        if r.get("fecha_hora_inicio"):
-            r["fecha_hora_inicio"] = format_iso_datetime(r["fecha_hora_inicio"])
-        if r.get("fecha_hora_fin"):
-            r["fecha_hora_fin"] = format_iso_datetime(r["fecha_hora_fin"])
+    for reserva in reservas:
+        if reserva.get(
+            "fecha_hora_inicio"
+        ):
+            reserva[
+                "fecha_hora_inicio"
+            ] = format_iso_datetime(
+                reserva[
+                    "fecha_hora_inicio"
+                ]
+            )
 
-    return {"reservas": reservas}, 200
+        if reserva.get(
+            "fecha_hora_fin"
+        ):
+            reserva[
+                "fecha_hora_fin"
+            ] = format_iso_datetime(
+                reserva[
+                    "fecha_hora_fin"
+                ]
+            )
 
+    return {
+        "reservas": reservas,
+        "total": total,
+        "extra_params": extra_params,
+    }, 200
 
 def obtener_por_id(reserva_id):
     reserva = obtener_reserva_por_id(reserva_id)
