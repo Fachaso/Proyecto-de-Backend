@@ -1,4 +1,13 @@
+import re
 import app.repositories.socios_repository as socios_repository
+
+EMAIL_REGEX = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+
+def es_email_valido(email):
+    if not isinstance(email, str):
+        return False
+    return bool(re.fullmatch(EMAIL_REGEX, email))    
+    
 
 def listar_socios(limit,offset,nombre,activo,):
     where_clauses = []
@@ -130,13 +139,7 @@ def crear_socio(data):
             ]
         }, 400
 
-    partes_email = email.split("@")
-
-    if (
-        len(partes_email) != 2
-        or not partes_email[0]
-        or "." not in partes_email[1]
-    ):
+    if not es_email_valido(email):
         return {
             "errors": [
                 {
@@ -145,8 +148,7 @@ def crear_socio(data):
                     "level": "error"
                 }
             ]
-        }, 400
-
+        }, 400    
     if socios_repository.verificar_email_existente(
         email
     ):
@@ -264,13 +266,7 @@ def actualizar_socio(socio_id, data):
 
         email = data["email"].strip().lower()
 
-        partes_email = email.split("@")
-
-        if (
-            len(partes_email) != 2
-            or not partes_email[0]
-            or "." not in partes_email[1]
-        ):
+        if not es_email_valido(email):
             return {
                 "errors": [
                     {
@@ -280,6 +276,7 @@ def actualizar_socio(socio_id, data):
                     }
                 ]
             }, 400
+                
 
         if (
             email != socio["email"].lower()
