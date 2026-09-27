@@ -48,11 +48,11 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
     where_clauses = []
     params = []
 
-    if id_cancha:
+    if id_cancha is not None:
         where_clauses.append("id_cancha = %s")
         params.append(id_cancha)
 
-    if id_socio:
+    if id_socio is not None:
         where_clauses.append("id_socio = %s")
         params.append(id_socio)
         
