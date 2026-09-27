@@ -140,7 +140,7 @@ def crear_reserva(data):
     fecha_hora_inicio = parse_iso_datetime(data.get("fecha_hora_inicio"))
     fecha_hora_fin = parse_iso_datetime(data.get("fecha_hora_fin"))
 
-    if not fecha_hora_inicio or not fecha_hora_fin:
+    if fecha_hora_inicio.time().minute != 0 or fecha_hora_fin.time().minute != 0:
         return respuesta_error(
             "ERROR_VALIDACION",
             "Las fechas deben ser ISO 8601 válidas con zona horaria (-03:00)",
