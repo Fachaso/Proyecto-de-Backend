@@ -175,9 +175,12 @@ def crear_socio(data):
         "activo": activo,
     }, 201
 
-    
+
 def actualizar_socio(socio_id, data):
-    socio = socios_repository.obtener_por_id(socio_id)
+    socio = socios_repository.obtener_por_id(
+        socio_id
+    )
+
     if not socio:
         return {
             "errors": [
@@ -189,31 +192,135 @@ def actualizar_socio(socio_id, data):
             ]
         }, 404
 
-    nombre = str(data.get('nombre', socio['nombre'])).strip()
-    email = str(data.get('email', socio['email'])).strip().lower()
-    activo = bool(data.get('activo', socio['activo']))
-
-    if not nombre or not email:
+    if not data:
         return {
             "errors": [
                 {
                     "code": "BAD_REQUEST",
-                    "message": "Campos obligatorios faltantes",
+                    "message": "El cuerpo no puede estar vacío",
                     "level": "error"
                 }
             ]
         }, 400
 
-    if email != socio['email'].lower() and socios_repository.verificar_email_existente(email):
-        return {
-            "errors": [
-                {
-                    "code": "CONFLICT",
-                    "message": "El correo electrónico ya se encuentra registrado",
-                    "level": "error"
-                }
-            ]
-        }, 409
+    campos_permitidos = {
+        "nombre",
+        "email",
+        "activo",
+    }
 
-    socios_repository.actualizar(socio_id, nombre, email, activo)
-    return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 200
+    for campo in data:
+        if campo not in campos_permitidos:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": f"Campo desconocido: {campo}",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+    nombre = socio["nombre"]
+    email = socio["email"]
+    activo = bool(socio["activo"])
+
+    if "nombre" in data:
+        if not isinstance(data["nombre"], str):
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "nombre debe ser un string",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+        nombre = data["nombre"].strip()
+
+        if not nombre:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "El nombre no puede estar vacío",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+    if "email" in data:
+        if not isinstance(data["email"], str):
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "email debe ser un string",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+        email = data["email"].strip().lower()
+
+        partes_email = email.split("@")
+
+        if (
+            len(partes_email) != 2
+            or not partes_email[0]
+            or "." not in partes_email[1]
+        ):
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "El email tiene un formato inválido",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+        if (
+            email != socio["email"].lower()
+            and socios_repository.verificar_email_existente(
+                email
+            )
+        ):
+            return {
+                "errors": [
+                    {
+                        "code": "CONFLICT",
+                        "message": "El correo electrónico ya se encuentra registrado",
+                        "level": "error"
+                    }
+                ]
+            }, 409
+
+    if "activo" in data:
+        if type(data["activo"]) is not bool:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "activo debe ser un booleano",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+        activo = data["activo"]
+
+    socios_repository.actualizar(
+        socio_id,
+        nombre,
+        email,
+        activo,
+    )
+
+    return {
+        "id": socio_id,
+        "nombre": nombre,
+        "email": email,
+        "activo": activo,
+    }, 200

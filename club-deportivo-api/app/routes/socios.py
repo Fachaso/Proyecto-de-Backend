@@ -91,7 +91,20 @@ def get_socio_by_id(socio_id):
 
 @socios_bp.route('/<int:socio_id>', methods=['PATCH'])
 def update_socio(socio_id):
-    data = request.get_json() or {}
+    data = request.get_json(
+        silent=True
+    )
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "El cuerpo debe ser un objeto JSON",
+                    "level": "error",
+                }
+            ]
+        }), 400
     resultado, status_code = socios_service.actualizar_socio(socio_id, data)
 
     if status_code == 204:
