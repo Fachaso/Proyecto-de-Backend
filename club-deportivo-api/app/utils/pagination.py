@@ -30,25 +30,64 @@ def get_pagination_params():
 
     return limit, offset, None
 
-def build_pagination_response(key_name, items, total, limit, offset, base_path, extra_params=None):
+def build_pagination_response(key_name,items,total,limit,offset,base_path,extra_params=None,):
     if extra_params is None:
         extra_params = {}
 
     def make_url(off):
         params = extra_params.copy()
-        params['_limit'] = limit
-        params['_offset'] = off
-        query_string = "&".join([f"{k}={v}" for k, v in params.items()])
-        return f"{base_path}?{query_string}"
 
-    last_offset = max(0, ((total - 1) // limit) * limit) if total > 0 else 0
+        params["_limit"] = limit
+        params["_offset"] = off
+
+        query_string = "&".join(
+            [
+                f"{key}={value}"
+                for key, value
+                in params.items()
+            ]
+        )
+
+        return (
+            f"{base_path}?"
+            f"{query_string}"
+        )
+
+    last_offset = max(
+        0,
+        ((total - 1) // limit)
+        * limit,
+    )
+
+    links = {
+        "_first": {
+            "href": make_url(0)
+        },
+        "_last": {
+            "href": make_url(
+                last_offset
+            )
+        },
+    }
+
+    if offset > 0:
+        links["_prev"] = {
+            "href": make_url(
+                max(
+                    0,
+                    offset - limit,
+                )
+            )
+        }
+
+    if offset + limit < total:
+        links["_next"] = {
+            "href": make_url(
+                offset + limit
+            )
+        }
 
     return {
         key_name: items,
-        "_links": {
-            "_first": {"href": make_url(0)},
-            "_last": {"href": make_url(last_offset)},
-            "_prev": {"href": make_url(max(0, offset - limit))} if offset > 0 else None,
-            "_next": {"href": make_url(offset + limit)} if (offset + limit) < total else None
-        }
+        "_links": links,
     }
