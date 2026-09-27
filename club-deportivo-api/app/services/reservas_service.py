@@ -48,6 +48,20 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
     where_clauses = []
     params = []
 
+    if limit <= 0:
+        return respuesta_error(
+            "ERROR_VALIDACION", 
+            "limit debe ser mayor a 0",
+            400, 
+        )
+
+    if offset < 0:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "offset no puede ser negativo",
+            400,
+        )
+
     if id_cancha is not None and (not isinstance(id_cancha, int) or id_cancha <= 0):
         return respuesta_error(
             "ERROR_VALIDACION",
@@ -71,15 +85,26 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
         params.append(id_socio)
         
     if estado:
+        if estado not in {"confirmada", "cancelada", "finalizada"}:
+            return respuesta_error(
+                "ERROR_VALIDACION", 
+                "El estado debe ser 'confirmada', 'cancelada' o 'finalizada',
+                400, 
+            )
+            
         where_clauses.append("estado = %s")
         params.append(estado)
 
     if fecha_desde:
         dt_desde = parse_iso_datetime(fecha_desde)
+        
         if not dt_desde:
             return respuesta_error(
-                "ERROR_VALIDACION", "Formato inválido para fecha_desde", 400
+                "ERROR_VALIDACION",
+                "Formato inválido para fecha_desde",
+                400, 
             )
+            
         where_clauses.append("fecha_hora_inicio >= %s")
         params.append(dt_desde)
         
@@ -87,8 +112,11 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
         dt_hasta = parse_iso_datetime(fecha_hasta)
         if not dt_hasta:
             return respuesta_error(
-                "ERROR_VALIDACION", "Formato inválido para fecha_hasta", 400
+                "ERROR_VALIDACION", 
+                "Formato inválido para fecha_hasta", 
+                400,
             )
+            
         where_clauses.append("fecha_hora_fin <= %s")
         params.append(dt_hasta)
 
@@ -174,6 +202,13 @@ def crear_reserva(data):
     fecha_hora_inicio = parse_iso_datetime(data.get("fecha_hora_inicio"))
     fecha_hora_fin = parse_iso_datetime(data.get("fecha_hora_fin"))
 
+    if not fecha_hora_inicio or not fecha_hora_fin:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "Las fechas deben ser validas",
+            400,
+        )
+
     if fecha_hora_inicio.time().minute != 0 or fecha_hora_fin.time().minute != 0:
         return respuesta_error(
             "ERROR_VALIDACION", "La reserva debe comenzar y terminar en horas exactas", 400
@@ -189,6 +224,13 @@ def crear_reserva(data):
         return respuesta_error(
             "ERROR_VALIDACION",
             "La reserva debe comenzar y terminar el mismo día",
+            400,
+        )
+
+    if fecha_hora_fin <= fecha_hora_inicio:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "La fecha de fin debe ser posterior a la fecha de inicio",
             400,
         )
         
