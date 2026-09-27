@@ -60,11 +60,27 @@ def obtener_por_id(socio_id):
     return socio, 200
 
 def crear_socio(data):
-    nombre = str(data.get('nombre', '')).strip()
-    email = str(data.get('email', '')).strip().lower()
-    activo = bool(data.get('activo', True))
+    campos_permitidos = {
+        "nombre",
+        "email",
+    }
 
-    if not nombre or not email:
+    for campo in data:
+        if campo not in campos_permitidos:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": f"Campo desconocido: {campo}",
+                        "level": "error"
+                    }
+                ]
+            }, 400
+
+    if (
+        "nombre" not in data
+        or "email" not in data
+    ):
         return {
             "errors": [
                 {
@@ -75,7 +91,65 @@ def crear_socio(data):
             ]
         }, 400
 
-    if socios_repository.verificar_email_existente(email):
+    nombre = data["nombre"]
+    email = data["email"]
+
+    if not isinstance(nombre, str):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "nombre debe ser un string",
+                    "level": "error"
+                }
+            ]
+        }, 400
+
+    if not isinstance(email, str):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "email debe ser un string",
+                    "level": "error"
+                }
+            ]
+        }, 400
+
+    nombre = nombre.strip()
+    email = email.strip().lower()
+
+    if not nombre:
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "El nombre no puede estar vacío",
+                    "level": "error"
+                }
+            ]
+        }, 400
+
+    partes_email = email.split("@")
+
+    if (
+        len(partes_email) != 2
+        or not partes_email[0]
+        or "." not in partes_email[1]
+    ):
+        return {
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "El email tiene un formato inválido",
+                    "level": "error"
+                }
+            ]
+        }, 400
+
+    if socios_repository.verificar_email_existente(
+        email
+    ):
         return {
             "errors": [
                 {
@@ -86,9 +160,22 @@ def crear_socio(data):
             ]
         }, 409
 
-    socio_id = socios_repository.crear(nombre, email, activo)
-    return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 201
+    activo = True
 
+    socio_id = socios_repository.crear(
+        nombre,
+        email,
+        activo,
+    )
+
+    return {
+        "id": socio_id,
+        "nombre": nombre,
+        "email": email,
+        "activo": activo,
+    }, 201
+
+    
 def actualizar_socio(socio_id, data):
     socio = socios_repository.obtener_por_id(socio_id)
     if not socio:

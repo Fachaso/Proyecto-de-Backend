@@ -60,7 +60,20 @@ def get_socios():
 
 @socios_bp.route('', methods=['POST'])
 def create_socio():
-    data = request.get_json() or {}
+    data = request.get_json(
+    silent=True
+    )
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": "El cuerpo debe ser un objeto JSON",
+                    "level": "error",
+                }
+            ]
+        }), 400
     resultado, status_code = socios_service.crear_socio(data)
 
     if status_code == 201:
