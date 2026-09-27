@@ -3,37 +3,92 @@ from datetime import datetime, timedelta, timezone
 import app.repositories.canchas_repository as canchas_repository
 
 
-def listar_canchas(
-    limit,
-    offset,
-    id_deporte,
-    nombre,
-    techada,
-    activa,
-):
+def listar_canchas(limit,offset,id_deporte,nombre,techada,activa,):
     where_clauses = []
     params = []
     extra_params = {}
 
-    if id_deporte:
-        where_clauses.append("id_deporte = %s")
+    if id_deporte is not None:
+        try:
+            id_deporte = int(id_deporte)
+        except (ValueError, TypeError):
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "id_deporte debe ser un entero positivo",
+                        "level": "error",
+                    }
+                ]
+            }, 400
+
+        if id_deporte <= 0:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "id_deporte debe ser un entero positivo",
+                        "level": "error",
+                    }
+                ]
+            }, 400
+
+        where_clauses.append(
+            "id_deporte = %s"
+        )
         params.append(id_deporte)
         extra_params["id_deporte"] = id_deporte
 
     if nombre:
-        where_clauses.append("LOWER(nombre) LIKE %s")
-        params.append(f"%{nombre.lower()}%")
+        where_clauses.append(
+            "LOWER(nombre) LIKE %s"
+        )
+        params.append(
+            f"%{nombre.lower()}%"
+        )
         extra_params["nombre"] = nombre
 
-    if techada in ["true", "false"]:
-        where_clauses.append("techada = %s")
+    if techada is not None:
+        if techada not in [
+            "true",
+            "false",
+        ]:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "techada debe ser true o false",
+                        "level": "error",
+                    }
+                ]
+            }, 400
+
+        where_clauses.append(
+            "techada = %s"
+        )
         params.append(
             1 if techada == "true" else 0
         )
         extra_params["techada"] = techada
 
-    if activa in ["true", "false"]:
-        where_clauses.append("activa = %s")
+    if activa is not None:
+        if activa not in [
+            "true",
+            "false",
+        ]:
+            return {
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": "activa debe ser true o false",
+                        "level": "error",
+                    }
+                ]
+            }, 400
+
+        where_clauses.append(
+            "activa = %s"
+        )
         params.append(
             1 if activa == "true" else 0
         )
@@ -48,13 +103,17 @@ def listar_canchas(
         where_sql = ""
 
     canchas, total = (
-        canchas_repository.obtener_con_filtros(
+        canchas_repository
+        .obtener_con_filtros(
             where_sql,
             params,
             limit,
             offset,
         )
     )
+
+    if not canchas:
+        return None, 204
 
     for cancha in canchas:
         cancha["techada"] = bool(
@@ -64,8 +123,11 @@ def listar_canchas(
             cancha["activa"]
         )
 
-    return canchas, total, extra_params
-
+    return {
+        "canchas": canchas,
+        "total": total,
+        "extra_params": extra_params,
+    }, 200
 
 def obtener_por_id(cancha_id):
     cancha = canchas_repository.obtener_por_id(

@@ -13,6 +13,26 @@ canchas_bp = Blueprint(
 
 @canchas_bp.route("",methods=["GET"],)
 def get_canchas():
+    parametros_permitidos = {
+        "id_deporte",
+        "nombre",
+        "techada",
+        "activa",
+        "_limit",
+        "_offset",
+    }
+
+    for parametro in request.args:
+        if parametro not in parametros_permitidos:
+            return jsonify({
+                "errors": [
+                    {
+                        "code": "BAD_REQUEST",
+                        "message": f"Parámetro desconocido: {parametro}",
+                        "level": "error",
+                    }
+                ]
+            }), 400
     limit, offset, error = (
         pagination.get_pagination_params()
     )
@@ -44,33 +64,24 @@ def get_canchas():
         "activa"
     )
 
-    (
-        canchas,
-        total,
-        extra_params,
-    ) = canchas_service.listar_canchas(
-        limit,
-        offset,
-        id_deporte,
-        nombre,
-        techada,
-        activa,
+    resultado, status_code = (
+        canchas_service.listar_canchas(limit,offset,id_deporte,nombre,techada,activa,)
     )
 
-    if not canchas:
+    if status_code == 204:
         return "", 204
 
-    response = (
-        pagination
-        .build_pagination_response(
-            "canchas",
-            canchas,
-            total,
-            limit,
-            offset,
-            "/canchas",
-            extra_params,
-        )
+    if status_code != 200:
+        return jsonify(resultado), status_code
+
+    response = pagination.build_pagination_response(
+        "canchas",
+        resultado["canchas"],
+        resultado["total"],
+        limit,
+        offset,
+        "/canchas",
+        resultado["extra_params"],
     )
 
     return jsonify(response), 200
