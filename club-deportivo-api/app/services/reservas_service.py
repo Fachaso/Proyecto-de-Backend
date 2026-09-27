@@ -48,6 +48,20 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
     where_clauses = []
     params = []
 
+    if limit <= 0:
+        return respuesta_error(
+            "ERROR_VALIDACION", 
+            "limit debe ser mayor a 0",
+            400, 
+        )
+
+    if offset < 0:
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "offset no puede ser negativo",
+            400,
+        )
+
     if id_cancha is not None and (not isinstance(id_cancha, int) or id_cancha <= 0):
         return respuesta_error(
             "ERROR_VALIDACION",
