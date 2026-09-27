@@ -38,11 +38,15 @@ def parse_iso_datetime(dt_str):
 def format_iso_datetime(dt):
     if isinstance(dt, str):
         dt = datetime.fromisoformat(dt)
-        
+
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=TZ_ARG)
-        
-    return dt.isoformat()
+        dt = dt.replace(
+            tzinfo=TZ_ARG
+        )
+
+    return dt.isoformat(
+        timespec="microseconds"
+    )
 
 def listar_reservas(limit,offset,id_cancha,id_socio,estado,fecha_desde,fecha_hasta,):
     where_clauses = []
