@@ -1,121 +1,150 @@
 import app.repositories.socios_repository as socios_repository
+from app.validators.socios_validators import (
+    validate_create_socio,
+    validate_update_socio,
+    validate_socios_filters
+)
+from app.validators.common_validators import make_error_response
 
-def listar_socios(limit, offset, nombre, email, activo):
-    where_clauses = []
-    params = []
-    extra_params = {}
 
-    if nombre:
-        where_clauses.append("LOWER(nombre) LIKE %s")
-        params.append(f"%{nombre.lower()}%")
-        extra_params['nombre'] = nombre
+def listar_socios(query_args, limit, offset):
+    """Delega validación de filtros y recupera socios paginados."""
+    resultado = None
+    status = 200
 
-    if email:
-        where_clauses.append("LOWER(email) LIKE %s")
-        params.append(f"%{email.lower()}%")
-        extra_params['email'] = email
+    filters, err = validate_socios_filters(query_args)
+    if err:
+        resultado = err
+        status = 400
+    else:
+        where_clauses = []
+        params = []
+        extra_params = {}
 
-    if activo in ['true', 'false']:
-        where_clauses.append("activo = %s")
-        params.append(1 if activo == 'true' else 0)
-        extra_params['activo'] = activo
+        if "nombre" in filters:
+            where_clauses.append("LOWER(nombre) LIKE %s")
+            params.append(f"%{filters['nombre'].lower()}%")
+            extra_params["nombre"] = filters["nombre"]
 
-    where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+        if "activo" in filters:
+            where_clauses.append("activo = %s")
+            params.append(1 if filters["activo"] else 0)
+            extra_params["activo"] = "true" if filters["activo"] else "false"
 
-    socios, total = socios_repository.obtener_con_filtros(where_sql, params, limit, offset)
+        where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+        socios, total = socios_repository.obtener_con_filtros(where_sql, params, limit, offset)
 
-    if not socios:
-        return None, 204
+        for s in socios:
+            s["activo"] = bool(s["activo"])
 
-    for s in socios:
-        s['activo'] = bool(s['activo'])
+        resultado = {
+            "socios": socios,
+            "total": total,
+            "extra_params": extra_params
+        }
+        status = 200
 
-    return {"socios": socios}, 200
+    return resultado, status
+
 
 def obtener_por_id(socio_id):
+    """Recupera un socio por ID con casteo booleano del campo activo."""
+    resultado = None
+    status = 200
+
     socio = socios_repository.obtener_por_id(socio_id)
     if not socio:
-        return {
-            "errors": [
-                {
-                    "code": "NOT_FOUND",
-                    "message": "Socio no encontrado",
-                    "level": "error"
-                }
-            ]
-        }, 404
+        resultado = make_error_response(
+            "NOT_FOUND",
+            "Socio no encontrado",
+            description=f"No existe un socio con el id {socio_id}"
+        )
+        status = 404
+    else:
+        socio["activo"] = bool(socio["activo"])
+        resultado = socio
+        status = 200
 
-    socio['activo'] = bool(socio['activo'])
-    return socio, 200
+    return resultado, status
+
 
 def crear_socio(data):
-    nombre = str(data.get('nombre', '')).strip()
-    email = str(data.get('email', '')).strip().lower()
-    activo = bool(data.get('activo', True))
+    """
+    Valida datos, verifica unicidad de email y persiste el socio.
+    Retorna obligatoriamente status 201 en caso de éxito.
+    """
+    resultado = None
+    status = 201
 
-    if not nombre or not email:
-        return {
-            "errors": [
-                {
-                    "code": "BAD_REQUEST",
-                    "message": "Campos obligatorios faltantes",
-                    "level": "error"
-                }
-            ]
-        }, 400
+    cleaned, err = validate_create_socio(data)
+    if err:
+        resultado = err
+        status = 400
+    elif socios_repository.verificar_email_existente(cleaned["email"]):
+        resultado = make_error_response(
+            "CONFLICT",
+            "El correo electrónico ya se encuentra registrado."
+        )
+        status = 409
+    else:
+        socio_id = socios_repository.crear(
+            cleaned["nombre"],
+            cleaned["email"],
+            cleaned["activo"]
+        )
+        resultado, _ = obtener_por_id(socio_id)
+        status = 201
 
-    if socios_repository.verificar_email_existente(email):
-        return {
-            "errors": [
-                {
-                    "code": "CONFLICT",
-                    "message": "El correo electrónico ya se encuentra registrado",
-                    "level": "error"
-                }
-            ]
-        }, 409
+    return resultado, status
 
-    socio_id = socios_repository.crear(nombre, email, activo)
-    return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 201
 
 def actualizar_socio(socio_id, data):
-    socio = socios_repository.obtener_por_id(socio_id)
-    if not socio:
-        return {
-            "errors": [
-                {
-                    "code": "NOT_FOUND",
-                    "message": "Socio no encontrado",
-                    "level": "error"
-                }
-            ]
-        }, 404
+    """Actualiza parcialmente un socio asegurando que el nuevo correo no colisione."""
+    resultado = None
+    status = 200
 
-    nombre = str(data.get('nombre', socio['nombre'])).strip()
-    email = str(data.get('email', socio['email'])).strip().lower()
-    activo = bool(data.get('activo', socio['activo']))
+    socio_actual = socios_repository.obtener_por_id(socio_id)
+    if not socio_actual:
+        resultado = make_error_response(
+            "NOT_FOUND",
+            "Socio no encontrado",
+            description=f"No existe un socio con el id {socio_id}"
+        )
+        status = 404
+    else:
+        cleaned, err = validate_update_socio(data)
+        if err:
+            resultado = err
+            status = 400
+        else:
+            email_colision = False
+            if "email" in cleaned and cleaned["email"] != socio_actual["email"].lower():
+                if socios_repository.verificar_email_existente(cleaned["email"], socio_id_excluir=socio_id):
+                    email_colision = True
 
-    if not nombre or not email:
-        return {
-            "errors": [
-                {
-                    "code": "BAD_REQUEST",
-                    "message": "Campos obligatorios faltantes",
-                    "level": "error"
-                }
-            ]
-        }, 400
+            if email_colision:
+                resultado = make_error_response(
+                    "CONFLICT",
+                    "El correo electrónico ya se encuentra registrado por otro socio."
+                )
+                status = 409
+            else:
+                fields = []
+                params = []
 
-    if email != socio['email'].lower() and socios_repository.verificar_email_existente(email):
-        return {
-            "errors": [
-                {
-                    "code": "CONFLICT",
-                    "message": "El correo electrónico ya se encuentra registrado",
-                    "level": "error"
-                }
-            ]
-        }, 409
+                if "nombre" in cleaned:
+                    fields.append("nombre = %s")
+                    params.append(cleaned["nombre"])
 
-    socios_repository.actualizar(socio_id, nombre, email, activo)
-    return {'id': socio_id, 'nombre': nombre, 'email': email, 'activo': activo}, 200
+                if "email" in cleaned:
+                    fields.append("email = %s")
+                    params.append(cleaned["email"])
+
+                if "activo" in cleaned:
+                    fields.append("activo = %s")
+                    params.append(1 if cleaned["activo"] else 0)
+
+                socios_repository.actualizar(socio_id, fields, params)
+                resultado, status = obtener_por_id(socio_id)
+
+    return resultado, status

@@ -1,111 +1,109 @@
 import app.db as db
 
-def obtener_por_id(reserva_id):
+
+def obtener_con_filtros(where_sql, params, limit, offset):
+    """Recupera socios paginados y el total de coincidencias."""
+    resultado = None
+    conn = db.get_db_connection()
+    cursor = conn.cursor()
+    try:
+        count_query = f"SELECT COUNT(*) AS total FROM socios{where_sql}"
+        cursor.execute(count_query, params)
+        total = cursor.fetchone()["total"]
+
+        data_query = (
+            f"SELECT id, nombre, email, activo "
+            f"FROM socios{where_sql} "
+            f"ORDER BY id ASC "
+            f"LIMIT %s OFFSET %s"
+        )
+        cursor.execute(data_query, params + [limit, offset])
+        socios = cursor.fetchall()
+
+        resultado = (socios, total)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return resultado
+
+
+def obtener_por_id(socio_id):
+    """Recupera un socio por su clave primaria."""
+    socio = None
     conn = db.get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            SELECT id, id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, estado, precio_total
-            FROM reservas
+            SELECT id, nombre, email, activo
+            FROM socios
             WHERE id = %s
             """,
-            (reserva_id,),
+            (socio_id,),
         )
-        return cursor.fetchone()
-
+        socio = cursor.fetchone()
     finally:
         cursor.close()
         conn.close()
 
+    return socio
 
-def crear(
-    id_socio,
-    id_cancha,
-    fecha_hora_inicio,
-    fecha_hora_fin,
-    precio_hora,
-    precio_total,
-):
+
+def verificar_email_existente(email, socio_id_excluir=None):
+    """
+    Comprueba si el correo ya está registrado.
+    Produce 409 incluso si el socio existente está inactivo.
+    """
+    existe = False
     conn = db.get_db_connection()
     cursor = conn.cursor()
-
     try:
-        query = """
-            INSERT INTO reservas (
-                id_socio,
-                id_cancha,
-                fecha_hora_inicio,
-                fecha_hora_fin,
-                tarifa_historica,
-                total
-            )
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
+        if socio_id_excluir:
+            query = "SELECT id FROM socios WHERE LOWER(email) = %s AND id != %s LIMIT 1"
+            cursor.execute(query, (email.lower(), socio_id_excluir))
+        else:
+            query = "SELECT id FROM socios WHERE LOWER(email) = %s LIMIT 1"
+            cursor.execute(query, (email.lower(),))
 
-        cursor.execute(
-            query,
-            (
-                id_socio,
-                id_cancha,
-                fecha_hora_inicio,
-                fecha_hora_fin,
-                precio_hora,
-                precio_total,
-            ),
-        )
-
-        conn.commit()
-        return cursor.lastrowid
-
+        existe = (cursor.fetchone() is not None)
     finally:
         cursor.close()
         conn.close()
 
-def actualizar_estado(reserva_id, nuevo_estado):
+    return existe
+
+
+def crear(nombre, email, activo=True):
+    """Inserta un socio nuevo y retorna el identificador autogenerado."""
+    nuevo_id = None
     conn = db.get_db_connection()
     cursor = conn.cursor()
     try:
         query = """
-            UPDATE reservas
-            SET estado = %s
-            WHERE id = %s
+            INSERT INTO socios (nombre, email, activo)
+            VALUES (%s, %s, %s)
         """
-        cursor.execute(query, (nuevo_estado, reserva_id))
+        cursor.execute(query, (nombre, email, 1 if activo else 0))
         conn.commit()
-
+        nuevo_id = cursor.lastrowid
     finally:
         cursor.close()
         conn.close()
 
+    return nuevo_id
 
-def obtener_con_filtros(where_sql, params, limit, offset):
+
+def actualizar(socio_id, fields, params):
+    """Actualiza dinámicamente las columnas indicadas."""
     conn = db.get_db_connection()
     cursor = conn.cursor()
     try:
-        count_query = (
-            f"SELECT COUNT(*) AS total "
-            f"FROM reservas{where_sql}"
-        )
-        cursor.execute(count_query, params)
-        total = cursor.fetchone()["total"]
-
-        data_query = (
-            f"SELECT id, id_socio, id_cancha, fecha_hora_inicio, fecha_hora_fin, estado, precio_total "
-            f"FROM reservas{where_sql} "
-            f"ORDER BY id ASC "
-            f"LIMIT %s OFFSET %s"
-        )
-
-        cursor.execute(
-            data_query,
-            params + [limit, offset],
-        )
-
-        reservas = cursor.fetchall()
-
-        return reservas, total
-
+        query = f"UPDATE socios SET {', '.join(fields)} WHERE id = %s"
+        cursor.execute(query, params + [socio_id])
+        conn.commit()
     finally:
         cursor.close()
         conn.close()
+
+    return None

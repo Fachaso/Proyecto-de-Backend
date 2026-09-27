@@ -1,47 +1,80 @@
-from flask import Blueprint, request, jsonify
-from app.services.socios_service import SociosService
-from app.utils.pagination import get_pagination_params
+from flask import Blueprint, jsonify, request
+import app.services.socios_service as socios_service
+import app.utils.pagination as pagination
+from app.validators.common_validators import reject_unknown_query_params
+from app.validators.socios_validators import ALLOWED_GET_SOCIOS_PARAMS
 
-socios_bp = Blueprint('socios', __name__, url_prefix='/socios')
+socios_bp = Blueprint("socios", __name__, url_prefix="/socios")
 
-@socios_bp.route('', methods=['GET'])
+
+@socios_bp.route("", methods=["GET"])
 def get_socios():
-    limit, offset = get_pagination_params()
-    nombre = request.args.get('nombre')
-    email = request.args.get('email')
-    activo = request.args.get('activo')
+    """GET /socios (Páginas 4, 6 y 7)."""
+    resp = None
+    query_args = request.args.to_dict()
+    err = reject_unknown_query_params(query_args, ALLOWED_GET_SOCIOS_PARAMS)
 
-    resultado, status_code = SociosService.listar_socios(limit, offset, nombre, email, activo)
-    
-    if status_code == 204:
-        return '', 204
-        
-    return jsonify(resultado), status_code
+    if err:
+        resp = jsonify(err), 400
+    else:
+        limit, offset = pagination.get_pagination_params()
+        resultado, status_code = socios_service.listar_socios(query_args, limit, offset)
 
-@socios_bp.route('', methods=['POST'])
+        if status_code != 200:
+            resp = jsonify(resultado), status_code
+        else:
+            response = pagination.build_pagination_response(
+                "socios",
+                resultado["socios"],
+                resultado["total"],
+                limit,
+                offset,
+                "/socios",
+                resultado["extra_params"],
+            )
+            resp = jsonify(response), 200
+
+    return resp
+
+
+@socios_bp.route("", methods=["POST"])
 def create_socio():
-    data = request.get_json() or {}
-    resultado, status_code = SociosService.crear_socio(data)
+    """
+    POST /socios.
+    Registra un socio y responde OBLIGATORIAMENTE 201 Created con Location y el JSON creado.
+    """
+    resp = None
+    data = request.get_json(silent=True)
+    if data is None:
+        data = {}
+
+    resultado, status_code = socios_service.crear_socio(data)
 
     if status_code == 201:
-        headers = {}
-        if isinstance(resultado, dict) and 'id' in resultado:
-            headers['Location'] = f"/socios/{resultado['id']}"
-        return '', 201, headers
-        
-    return jsonify(resultado), status_code
+        headers = {"Location": f"/socios/{resultado['id']}"}
+        resp = jsonify(resultado), 201, headers
+    else:
+        resp = jsonify(resultado), status_code
 
-@socios_bp.route('/<int:socio_id>', methods=['GET'])
+    return resp
+
+
+@socios_bp.route("/<int:socio_id>", methods=["GET"])
 def get_socio_by_id(socio_id):
-    resultado, status_code = SociosService.obtener_por_id(socio_id)
+    """GET /socios/{id} (Página 6)."""
+    resultado, status_code = socios_service.obtener_por_id(socio_id)
     return jsonify(resultado), status_code
 
-@socios_bp.route('/<int:socio_id>', methods=['PATCH'])
-def update_socio(socio_id):
-    data = request.get_json() or {}
-    resultado, status_code = SociosService.actualizar_socio(socio_id, data)
 
-    if status_code == 204:
-        return '', 204
-        
+@socios_bp.route("/<int:socio_id>", methods=["PATCH"])
+def update_socio(socio_id):
+    """
+    PATCH /socios/{id}.
+    Actualiza parcialmente el socio y responde 200 OK con el recurso modificado.
+    """
+    data = request.get_json(silent=True)
+    if data is None:
+        data = {}
+
+    resultado, status_code = socios_service.actualizar_socio(socio_id, data)
     return jsonify(resultado), status_code

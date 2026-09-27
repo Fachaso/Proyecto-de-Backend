@@ -1,10 +1,13 @@
-from app.repositories.deportes_repository import obtener_todos
+import app.repositories.deportes_repository as deportes_repository
 
 
 def listar_deportes():
-    deportes = obtener_todos()
+    """
+    Retorna la lista de deportes precargados.
+    Las consultas exitosas devuelven siempre 200 OK con un arreglo.
+    """
+    deportes = deportes_repository.obtener_todos()
+    resultado = deportes if deportes is not None else []
+    status = 200
 
-    if not deportes:
-        return None, 204
-
-    return {"deportes": deportes}, 200
+    return resultado, status
