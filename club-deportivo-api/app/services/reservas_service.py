@@ -88,8 +88,8 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
         if estado not in {"confirmada", "cancelada", "finalizada"}:
             return respuesta_error(
                 "ERROR_VALIDACION", 
-                "El estado debe ser 'confirmada', 'cancelada' o 'finalizada',
-                400, 
+                "El estado debe ser 'confirmada', 'cancelada' o 'finalizada',"
+                '400,'
             )
             
         where_clauses.append("estado = %s")
