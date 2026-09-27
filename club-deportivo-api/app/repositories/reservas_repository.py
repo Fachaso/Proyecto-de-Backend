@@ -6,7 +6,6 @@ CAMPOS_RESERVA = """
     id_socio,
     id_cancha,
     fecha_hora_inicio,
-    fecha_hora_inicio,
     fecha_hora_fin,
     estado,
     tarifa_historica AS precio_hora,
