@@ -280,23 +280,29 @@ def actualizar_estado(reserva_id, nuevo_estado):
         
     estado_actual = reserva["estado"]
 
-    if estado_actual == nuevo_estado:
-        reserva["fecha_hora_inicio"] = format_iso_datetime(reserva["fecha_hora_inicio"])
-        reserva["fecha_hora_fin"] = format_iso_datetime(reserva["fecha_hora_fin"])
-        return reserva, 200
-        
-    if estado_actual in {"cancelada", "finalizada"}:
-        return respuesta_error(
-            "RECURSO_SUPERPUESTO",
-            f"No se puede cambiar el estado de una reserva '{estado_actual}'",
-            409,
-        )
     if nuevo_estado not in {"cancelada", "finalizada"}:
         return respuesta_error(
             "ERROR_VALIDACION", 
             "El nuevo estado solo puede ser 'cancelada' o 'finalizada'",
             400,
         )
+        
+    if estado_actual == nuevo_estado:
+        reserva["fecha_hora_inicio"] = format_iso_datetime(
+            reserva["fecha_hora_inicio"]
+        )
+        reserva["fecha_hora_fin"] = format_iso_datetime(
+            reserva["fecha_hora_fin"]
+        )
+        return reserva, 200
+
+    if estado_actual in {"cancelada", "finalizada"}:
+        return respuesta_error(
+            "RECURSO_SUPERPUESTO",
+            f"No se puede cambiar el estado de una reserva '{estado_actual}'",
+            409,
+        )
+    
     ahora = datetime.now(TZ_ARG)
     fecha_inicio = parse_iso_datetime(reserva["fecha_hora_inicio"]) if isinstance(reserva["fecha_hora_inicio"], str) else reserva["fecha_hora_inicio"]
     fecha_fin = parse_iso_datetime(reserva["fecha_hora_fin"]) if isinstance(reserva["fecha_hora_fin"], str) else reserva["fecha_hora_fin"]
