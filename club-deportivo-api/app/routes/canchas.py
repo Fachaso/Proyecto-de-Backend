@@ -224,23 +224,6 @@ def get_canchas_disponibles():
     methods=["GET"],
 )
 def get_cancha_by_id(cancha_id):
-    if request.args:
-        parametro = next(
-            iter(request.args)
-        )
-        return jsonify({
-            "errors": [
-                {
-                    "code": "BAD_REQUEST",
-                    "message": (
-                        f"Parámetro desconocido: "
-                        f"{parametro}"
-                    ),
-                    "level": "error",
-                }
-            ]
-        }), 400
-
     cancha = (
         canchas_service.obtener_por_id(
             cancha_id
