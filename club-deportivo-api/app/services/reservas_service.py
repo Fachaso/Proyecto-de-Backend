@@ -117,7 +117,25 @@ def obtener_por_id(reserva_id):
 
 
 def crear_reserva(data):
-    campos_obligatorios = ["id_socio", "id_cancha", "fecha_hora_inicio", "fecha_hora_fin"]
+    campos_permitidos = {
+        "id_socio",
+        "id_cancha",
+        "fecha_hora_inicio",
+        "fecha_hora_fin",
+    }
+    if any(campo not in campos_permitidos for campo in data):
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "El cuerpo contiene campos no permitidos",
+            400,
+        )
+    campos_obligatorios = [
+        "id_socio", 
+        "id_cancha", 
+        "fecha_hora_inicio", 
+        "fecha_hora_fin"
+    ]
+    
     for campo in campos_obligatorios:
         if campo not in data or data[campo] is None:
             return respuesta_error(
@@ -134,7 +152,9 @@ def crear_reserva(data):
 
     if isinstance(id_socio, bool) or not isinstance(id_socio, int) or id_socio <= 0:
         return respuesta_error(
-            "ERROR_VALIDACION", "id_socio debe ser un entero positivo", 400
+            "ERROR_VALIDACION",
+            "id_socio debe ser un entero positivo",
+            400,
         )
 
     fecha_hora_inicio = parse_iso_datetime(data.get("fecha_hora_inicio"))
@@ -142,9 +162,7 @@ def crear_reserva(data):
 
     if fecha_hora_inicio.time().minute != 0 or fecha_hora_fin.time().minute != 0:
         return respuesta_error(
-            "ERROR_VALIDACION",
-            "Las fechas deben ser ISO 8601 válidas con zona horaria (-03:00)",
-            400,
+            "ERROR_VALIDACION", "La reserva debe comenzar y terminar en horas exactas", 400
         )
 
     ahora = datetime.now(TZ_ARG)
