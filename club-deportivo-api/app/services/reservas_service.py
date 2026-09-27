@@ -221,15 +221,15 @@ def crear_reserva(data):
         )
 
     precio_hora = cancha["precio_hora"]
-    precio_total = float(precio_hora) * int(duracion_horas)
+    precio_total = precio_hora * int(duracion_horas)
 
     reserva_id = crear_en_repo(
         id_cancha=id_cancha,
         id_socio=id_socio,
         fecha_hora_inicio=fecha_hora_inicio,
         fecha_hora_fin=fecha_hora_fin,
-        precio_hora=precio_hora,
-        precio_total=precio_total,
+        tarifa_historica=precio_hora,
+        total=precio_total,
     )
 
     reserva_creada = obtener_reserva_por_id(reserva_id)
