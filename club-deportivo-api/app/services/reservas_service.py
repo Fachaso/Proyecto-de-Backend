@@ -48,6 +48,20 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
     where_clauses = []
     params = []
 
+    if id_cancha is not None and (not isinstance(id_cancha, int) or id_cancha <= 0):
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "id_cancha debe ser un entero positivo",
+            400,
+        )
+
+    if id_socio is not None and (not isinstance(id_socio, int) or id_socio <= 0):
+        return respuesta_error(
+            "ERROR_VALIDACION",
+            "id_socio debe ser un entero positivo",
+            400,
+        )
+
     if id_cancha is not None:
         where_clauses.append("id_cancha = %s")
         params.append(id_cancha)
