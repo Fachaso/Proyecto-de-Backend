@@ -1,16 +1,17 @@
-import app.db as db 
+import app.db as db
+
 
 def obtener_con_filtros(where_sql, params, limit, offset):
     conn = db.get_db_connection()
     cursor = conn.cursor()
     try:
-        count_query = f"SELECT COUNT(*) AS total FROM canchas {where_sql}
+        count_query = f"SELECT COUNT(*) AS total FROM canchas {where_sql}"
         cursor.execute(count_query, params)
         total = cursor.fetchone()["total"]
 
         data_query = (
             f"SELECT id, id_deporte, nombre, precio_hora, techada, activa "
-            f"FROM canchas{where_sql} "
+            f"FROM canchas {where_sql} "
             f"ORDER BY id ASC "
             f"LIMIT %s OFFSET %s"
         )
@@ -192,12 +193,12 @@ def obtener_canchas_disponibles(
 
         where_sql = " WHERE " + " AND ".join(where_clauses)
 
-        count_query = f"SELECT COUNT (*) AS total FROM canchas c {where_sql}"
+        count_query = f"SELECT COUNT(*) AS total FROM canchas c {where_sql}"
         cursor.execute(count_query, params)
         total = cursor.fetchone()["total"]
 
         data_query = (
-            f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activada "
+            f"SELECT c.id, c.id_deporte, c.nombre, c.precio_hora, c.techada, c.activa "  # Corregido 'activada' a 'activa'
             f"FROM canchas c {where_sql} " 
             f"ORDER BY c.id ASC "
             f"LIMIT %s OFFSET %s"

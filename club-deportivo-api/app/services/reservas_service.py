@@ -80,6 +80,7 @@ def listar_reservas(limit, offset, id_cancha, id_socio, estado,  fecha_desde, fe
 
     where_sql = (
        " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+    )
         
     reservas, _total = obtener_con_filtros(where_sql, params, limit, offset)
 
