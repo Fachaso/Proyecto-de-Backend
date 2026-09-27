@@ -113,14 +113,46 @@ def get_reserva_by_id(reserva_id):
 
 @reservas_bp.route("", methods=["POST"])
 def create_reserva():
-    data = request.get_json() or {}
-    resultado, status_code = reservas_service.crear_reserva(data)
+    data = request.get_json(
+        silent=True
+    )
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "errors": [
+                {
+                    "code": "BAD_REQUEST",
+                    "message": (
+                        "El cuerpo debe ser "
+                        "un objeto JSON"
+                    ),
+                    "level": "error",
+                }
+            ]
+        }), 400
+
+    resultado, status_code = (
+        reservas_service.crear_reserva(
+            data
+        )
+    )
 
     if status_code == 201:
-        return jsonify(resultado), 201, {"Location": f"/reservas/{resultado['id']}"}
+        headers = {}
 
-    return jsonify(resultado), status_code
+        if (
+            isinstance(resultado, dict)
+            and "id" in resultado
+        ):
+            headers["Location"] = (
+                f"/reservas/{resultado['id']}"
+            )
 
+        return "", 201, headers
+
+    return jsonify(
+        resultado
+    ), status_code
 
 @reservas_bp.route("/<int:reserva_id>/estado", methods=["PUT"])
 def update_reserva_estado(reserva_id):

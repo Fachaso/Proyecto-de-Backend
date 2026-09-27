@@ -30,10 +30,29 @@ def respuesta_error(codigo, mensaje, estado_http):
 def parse_iso_datetime(dt_str):
     if not isinstance(dt_str, str):
         return None
+
     try:
-        return datetime.fromisoformat(dt_str)
+        dt = datetime.fromisoformat(
+            dt_str
+        )
     except ValueError:
         return None
+
+    if (
+        dt.utcoffset()
+        != timedelta(hours=-3)
+    ):
+        return None
+
+    if (
+        dt.isoformat(
+            timespec="microseconds"
+        )
+        != dt_str
+    ):
+        return None
+
+    return dt
 
 def format_iso_datetime(dt):
     if isinstance(dt, str):
@@ -374,9 +393,21 @@ def crear_reserva(data):
             400,
         )
 
-    if fecha_hora_inicio.time().minute != 0 or fecha_hora_fin.time().minute != 0:
+    if (
+        fecha_hora_inicio.minute != 0
+        or fecha_hora_inicio.second != 0
+        or fecha_hora_inicio.microsecond != 0
+        or fecha_hora_fin.minute != 0
+        or fecha_hora_fin.second != 0
+        or fecha_hora_fin.microsecond != 0
+    ):
         return respuesta_error(
-            "ERROR_VALIDACION", "La reserva debe comenzar y terminar en horas exactas", 400
+            "ERROR_VALIDACION",
+            (
+                "La reserva debe comenzar "
+                "y terminar en horas exactas"
+            ),
+            400,
         )
 
     ahora = datetime.now(TZ_ARG)
