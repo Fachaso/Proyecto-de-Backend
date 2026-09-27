@@ -318,9 +318,4 @@ def actualizar_socio(socio_id, data):
         activo,
     )
 
-    return {
-        "id": socio_id,
-        "nombre": nombre,
-        "email": email,
-        "activo": activo,
-    }, 200
+    return None, 204
