@@ -18,15 +18,54 @@
 ---
 
 ## Versiones utilizadas 
-... [OBLIGATORIO COMPLETAR]
+* Python 3.10 o superior
+* Flask (para levantar la API)
+* MySQL (para la base de datos)
+* Swagger / OpenAPI 3.0 (para el contrato)
+
 ## Pasos de instalación 
-... [OBLIGATORIO COMPLETAR]
+1. Entrar a la carpeta del código: `cd club-deportivo-api`
+2. Armar el entorno virtual para no romper nada: `python -m venv venv`
+3. Activarlo en Windows con `venv\Scripts\activate` (o en Mac/Linux con `source venv/bin/activate`)
+4. Instalar las librerías del proyecto: `pip install -r requirements.txt`
+
 ## Ejecución 
-... [OBLIGATORIO COMPLETAR]
+Para arrancar el servidor local, corremos el archivo principal con Python:
+```bash
+python run.py
+```
+La API se levanta por defecto en: `http://localhost:5000/`
+
+
 ## Configuración
-... [OBLIGATORIO COMPLETAR]
+1. Configurar la base de datos MySQL corriendo los scripts que están dentro de la carpeta `scripts/`.
+2. Crear un archivo llamado `.env` en la raíz de la carpeta `club-deportivo-api/` usando como plantilla el archivo `.env.example` para poner las credenciales locales de la base de datos.
+
+
 ## Ejemplos de solicitudes y supuestos adoptados
-... [OBLIGATORIO COMPLETAR]
+### Supuestos del Club
+* El club abre de 08:00 a 23:00. Los turnos son de horas completas (de 1 a 3 horas) y arrancan clavados en punto.
+* Todos los precios se manejan en centavos para evitar problemas con los decimales en la base de datos (ej: $10.000 se guarda como 1000000).
+* Si una cancha cambia de precio, las reservas viejas mantienen su tarifa congelada al momento en que se hicieron.
+* El sistema valida que no se superpongan turnos en una misma cancha ni que un socio reserve dos cosas a la misma hora.
+
+
+
+### Ejemplos de solicitudes de prueba
+
+1. **Ver canchas disponibles (GET):**
+`http://localhost:5000/canchas/disponibles?fecha=2026-10-15&hora_inicio=18:00:00&hora_fin=20:00:00`
+
+2. **Crear una reserva (POST a /reservas):**
+```json
+{
+  "id_socio": 1,
+  "id_cancha": 2,
+  "fecha_hora_inicio": "2026-10-15T18:00:00.000000-03:00",
+  "fecha_hora_fin": "2026-10-15T20:00:00.000000-03:00"
+}
+```
+
 
 
 ## Índice
@@ -42,22 +81,30 @@
 
 
 ## 1. Instrucciones
-### 1.1. Compilar el proyecto
-``` bash
-    
+### 1.1. Compilación
+Al ser un proyecto desarrollado en Python, no requiere ningún proceso de compilación previa. El servidor se interpreta y ejecuta directamente.
+
+### 1.2. Para ejecutar
+Para levantar el entorno, parate en la carpeta principal y corre:
+```bash
+python run.py
 ```
-###1.2. Para ejecutar 
-```bash 
-   ./tp
-```
+
 
 
 
 ## 2. Funcionamiento
+La API interactúa mediante peticiones HTTP en formato JSON. Cuando llega una solicitud (por ejemplo, para crear una reserva), el sistema primero valida el horario contra las reglas del club, chequea en la base de datos que no haya superposiciones de turnos y, si está todo en orden, calcula el precio final y persiste el registro en MySQL.
 
 
 
 ## 3. Estructura
+* `run.py`: Archivo principal para encender el servidor Flask.
+* `app/`: Carpeta contenedora de todo el código de la aplicación.
+* `app/routes/`: Definición de los endpoints y manejo de las peticiones HTTP.
+* `app/services/`: Capa lógica donde se validan las reglas de negocio y horarios.
+* `app/repositories/`: Consultas SQL directas hacia la base de datos.
+* `scripts/`: Scripts SQL para la creación inicial de las tablas del club.
 
 
 
